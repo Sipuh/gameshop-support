@@ -319,10 +319,6 @@ export default function AdminPage() {
           <div className="topbar-row" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <h1 className="page-title" style={{ fontSize: '24px', fontWeight: 700, color: '#ffffff' }}>Статьи</h1>
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#4a4a6a', fontSize: '13px' }}>
-                <div className="avatar-sm" style={{ width: '28px', height: '28px', borderRadius: '50%', background: 'linear-gradient(135deg, #7c5cfc, #5a3fd4)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', fontWeight: 600, color: '#fff' }}>{(user.email?.[0] || 'U').toUpperCase()}</div>
-                <span style={{ color: '#6a6a8e' }}>{user.email.split('@')[0]}</span>
-              </div>
               <button className="btn-new" onClick={openCreateModal} style={{ background: 'linear-gradient(135deg, #7c5cfc, #5a3fd4)', color: '#fff', border: 'none', padding: '10px 18px', borderRadius: '8px', fontSize: '13px', fontWeight: 500, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', transition: 'opacity 0.15s' }}
                 onMouseEnter={(e) => e.currentTarget.style.opacity = '0.88'}
                 onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}

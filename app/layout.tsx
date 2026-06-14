@@ -20,6 +20,9 @@ export default function RootLayout({
 }) {
   return (
     <html lang="ru">
+      <head>
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css" />
+      </head>
       <body className={`${inter.variable} ${exo2.variable}`}>
         {children}
         <footer>
