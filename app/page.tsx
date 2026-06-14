@@ -29,9 +29,7 @@ interface Article {
 const IMG_PREFIX = '/images/';
 
 function getImgSrc(cat: Category): string {
-  // Если есть icon - используем API для получения из БД, иначе fallback на файл
   if (cat.id) {
-    // Пытаемся загрузить из БД через API
   }
   const map: Record<string, string> = {
     ps5: 'PS-5.png',
@@ -62,6 +60,18 @@ export default function HomePage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [expandedCategory, setExpandedCategory] = useState<string | null>(null);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  const copyWithToast = async (text: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setToastMessage('✅ Текст скопирован');
+      setTimeout(() => setToastMessage(null), 2000);
+    } catch {
+      setToastMessage('❌ Ошибка копирования');
+      setTimeout(() => setToastMessage(null), 2000);
+    }
+  };
 
   useEffect(() => {
     fetch('/api/categories')
@@ -154,21 +164,13 @@ export default function HomePage() {
                     </div>
                   )}
                   <div className="article-desc-box">
-                    <div className="article-header-with-copy">
-                      <h3>📄 Описание проблемы</h3>
-                      <button className="copy-btn" onClick={() => navigator.clipboard.writeText(selectedArticle.description)} title="Копировать текст">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                          <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
-                          <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
-                        </svg>
-                      </button>
-                    </div>
+                    <h3>📄 Описание проблемы</h3>
                     <p>{selectedArticle.description}</p>
                   </div>
                   <div className="article-solution-box">
                     <div className="article-header-with-copy">
                       <h3>🔧 Решение</h3>
-                      <button className="copy-btn" onClick={() => navigator.clipboard.writeText(selectedArticle.solution)} title="Копировать текст">
+                      <button className="copy-btn" onClick={() => copyWithToast(selectedArticle.solution)} title="Копировать текст">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                           <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
                           <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
@@ -177,6 +179,7 @@ export default function HomePage() {
                     </div>
                     <div>{selectedArticle.solution}</div>
                   </div>
+                  {toastMessage && <div className="toast-notification">{toastMessage}</div>}
                 </div>
               </div>
             </div>
@@ -274,7 +277,6 @@ export default function HomePage() {
                     alt={cat.name}
                     onError={(e) => {
                       const target = e.target as HTMLImageElement;
-                      // Fallback на статический файл
                       target.src = getImgSrc(cat);
                     }}
                   />
@@ -375,7 +377,6 @@ function Sidebar({
                     alt={cat.name}
                     onError={(e) => {
                       const target = e.target as HTMLImageElement;
-                      // Fallback на статический файл
                       target.src = getImgSrc(cat);
                     }}
                   />

@@ -453,6 +453,28 @@ body {
   opacity: .85;
 }
 
+/* ── Toast уведомление ── */
+.toast-notification {
+  position: fixed;
+  bottom: 30px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--bg-card);
+  border: 1px solid var(--purple-lite);
+  border-radius: 12px;
+  padding: 12px 24px;
+  font-size: 14px;
+  color: var(--text-main);
+  box-shadow: 0 0 24px rgba(124,58,237,0.4);
+  z-index: 1000;
+  animation: toast-in 0.3s ease;
+}
+
+@keyframes toast-in {
+  from { opacity: 0; transform: translateX(-50%) translateY(20px); }
+  to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+
 /* ── Footer ── */
 footer {
   background: var(--bg-panel);
