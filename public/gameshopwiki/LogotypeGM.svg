@@ -1,0 +1,37 @@
+<svg width="256" height="256" viewBox="0 0 256 256" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="256" y2="256">
+      <stop stop-color="#B026FF"></stop>
+      <stop offset="1" stop-color="#00D1FF"></stop>
+    </linearGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="4" result="coloredBlur"></feGaussianBlur>
+      <feMerge>
+        <feMergeNode in="coloredBlur"></feMergeNode>
+        <feMergeNode in="SourceGraphic"></feMergeNode>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <rect width="256" height="256" rx="56" fill="#0B0F1A"></rect>
+
+  <!-- gamepad -->
+  <path filter="url(#glow)" d="M70 140
+           C70 110 90 92 120 92
+           H136
+           C166 92 186 110 186 140
+           C186 165 168 180 150 180
+           C140 180 136 170 128 170
+           C120 170 116 180 106 180
+           C88 180 70 165 70 140Z" stroke="url(#g)" stroke-width="6" fill="none"></path>
+
+  <!-- buttons -->
+  <circle cx="150" cy="125" r="6" fill="#00D1FF"></circle>
+  <circle cx="165" cy="140" r="6" fill="#B026FF"></circle>
+  <circle cx="150" cy="155" r="6" fill="#00D1FF"></circle>
+  <circle cx="135" cy="140" r="6" fill="#B026FF"></circle>
+
+  <!-- left stick -->
+  <circle cx="105" cy="140" r="10" stroke="url(#g)" stroke-width="4"></circle>
+
+</svg>

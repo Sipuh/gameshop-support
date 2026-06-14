@@ -8,6 +8,9 @@ const exo2 = Exo_2({ subsets: ['latin', 'cyrillic'], variable: '--font-exo' })
 export const metadata: Metadata = {
   title: 'GameShop — Библиотека поддержки',
   description: 'База знаний по ошибкам и проблемам PlayStation',
+  icons: {
+    icon: '/gameshopwiki/LogotypeGM.svg',
+  },
 }
 
 export default function RootLayout({
