@@ -1,37 +1,63 @@
 <svg width="256" height="256" viewBox="0 0 256 256" fill="none" xmlns="http://www.w3.org/2000/svg">
   <defs>
+    <!-- яркий градиент -->
     <linearGradient id="g" x1="0" y1="0" x2="256" y2="256">
-      <stop stop-color="#B026FF"></stop>
-      <stop offset="1" stop-color="#00D1FF"></stop>
+      <stop stop-color="#FF2BD6"></stop>
+      <stop offset="0.5" stop-color="#7C4DFF"></stop>
+      <stop offset="1" stop-color="#00E5FF"></stop>
     </linearGradient>
-    <filter id="glow">
-      <feGaussianBlur stdDeviation="4" result="coloredBlur"></feGaussianBlur>
+
+    <!-- сильное свечение -->
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="6" result="b"></feGaussianBlur>
+      <feColorMatrix in="b" type="matrix" values="1 0 0 0 0
+                0 1 0 0 0
+                0 0 1 0 0
+                0 0 0 1 0" result="c"></feColorMatrix>
       <feMerge>
-        <feMergeNode in="coloredBlur"></feMergeNode>
+        <feMergeNode in="c"></feMergeNode>
+        <feMergeNode in="SourceGraphic"></feMergeNode>
+      </feMerge>
+    </filter>
+
+    <!-- дополнительный glow -->
+    <filter id="softGlow">
+      <feGaussianBlur stdDeviation="10" result="b"></feGaussianBlur>
+      <feMerge>
+        <feMergeNode in="b"></feMergeNode>
         <feMergeNode in="SourceGraphic"></feMergeNode>
       </feMerge>
     </filter>
   </defs>
 
-  <rect width="256" height="256" rx="56" fill="#0B0F1A"></rect>
+  <!-- внешний энергетический контур -->
+  <path filter="url(#softGlow)" d="M70 138
+           C70 105 92 86 125 86
+           H131
+           C164 86 186 105 186 138
+           C186 168 165 188 148 188
+           C138 188 134 175 128 175
+           C122 175 118 188 108 188
+           C88 188 70 168 70 138Z" stroke="url(#g)" stroke-width="8" fill="none"></path>
 
-  <!-- gamepad -->
-  <path filter="url(#glow)" d="M70 140
-           C70 110 90 92 120 92
+  <!-- основной геймпад -->
+  <path filter="url(#glow)" d="M72 140
+           C72 112 92 96 120 96
            H136
-           C166 92 186 110 186 140
-           C186 165 168 180 150 180
-           C140 180 136 170 128 170
-           C120 170 116 180 106 180
-           C88 180 70 165 70 140Z" stroke="url(#g)" stroke-width="6" fill="none"></path>
+           C164 96 184 112 184 140
+           C184 164 168 178 150 178
+           C140 178 136 166 128 166
+           C120 166 116 178 106 178
+           C88 178 72 164 72 140Z" stroke="url(#g)" stroke-width="5" fill="none"></path>
 
-  <!-- buttons -->
-  <circle cx="150" cy="125" r="6" fill="#00D1FF"></circle>
-  <circle cx="165" cy="140" r="6" fill="#B026FF"></circle>
-  <circle cx="150" cy="155" r="6" fill="#00D1FF"></circle>
-  <circle cx="135" cy="140" r="6" fill="#B026FF"></circle>
+  <!-- кнопки (очень яркие) -->
+  <circle cx="150" cy="126" r="7" fill="#FF2BD6"></circle>
+  <circle cx="166" cy="140" r="7" fill="#00E5FF"></circle>
+  <circle cx="150" cy="156" r="7" fill="#7C4DFF"></circle>
+  <circle cx="134" cy="140" r="7" fill="#00FFB2"></circle>
 
-  <!-- left stick -->
-  <circle cx="105" cy="140" r="10" stroke="url(#g)" stroke-width="4"></circle>
+  <!-- стики -->
+  <circle cx="106" cy="140" r="11" stroke="url(#g)" stroke-width="4"></circle>
+  <circle cx="106" cy="140" r="4" fill="#00E5FF"></circle>
 
 </svg>
