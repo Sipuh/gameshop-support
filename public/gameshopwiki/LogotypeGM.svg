@@ -1,27 +1,12 @@
-<svg width="256" height="256" viewBox="0 0 256 256" fill="none" xmlns="http://www.w3.org/2000/svg">
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
   <defs>
-    <!-- яркий градиент -->
-    <linearGradient id="g" x1="0" y1="0" x2="256" y2="256">
+    <linearGradient id="g" x1="0" y1="0" x2="512" y2="512">
       <stop stop-color="#FF2BD6"></stop>
       <stop offset="0.5" stop-color="#7C4DFF"></stop>
       <stop offset="1" stop-color="#00E5FF"></stop>
     </linearGradient>
 
-    <!-- сильное свечение -->
     <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
-      <feGaussianBlur stdDeviation="6" result="b"></feGaussianBlur>
-      <feColorMatrix in="b" type="matrix" values="1 0 0 0 0
-                0 1 0 0 0
-                0 0 1 0 0
-                0 0 0 1 0" result="c"></feColorMatrix>
-      <feMerge>
-        <feMergeNode in="c"></feMergeNode>
-        <feMergeNode in="SourceGraphic"></feMergeNode>
-      </feMerge>
-    </filter>
-
-    <!-- дополнительный glow -->
-    <filter id="softGlow">
       <feGaussianBlur stdDeviation="10" result="b"></feGaussianBlur>
       <feMerge>
         <feMergeNode in="b"></feMergeNode>
@@ -30,34 +15,33 @@
     </filter>
   </defs>
 
-  <!-- внешний энергетический контур -->
-  <path filter="url(#softGlow)" d="M70 138
-           C70 105 92 86 125 86
-           H131
-           C164 86 186 105 186 138
-           C186 168 165 188 148 188
-           C138 188 134 175 128 175
-           C122 175 118 188 108 188
-           C88 188 70 168 70 138Z" stroke="url(#g)" stroke-width="8" fill="none"></path>
+  <!-- outer glow shape -->
+  <path filter="url(#glow)" d="M140 280
+           C140 210 190 170 260 170
+           H270
+           C340 170 390 210 390 280
+           C390 340 350 380 320 380
+           C300 380 295 360 256 360
+           C217 360 212 380 192 380
+           C162 380 140 340 140 280Z" stroke="url(#g)" stroke-width="18" fill="none"></path>
 
-  <!-- основной геймпад -->
-  <path filter="url(#glow)" d="M72 140
-           C72 112 92 96 120 96
-           H136
-           C164 96 184 112 184 140
-           C184 164 168 178 150 178
-           C140 178 136 166 128 166
-           C120 166 116 178 106 178
-           C88 178 72 164 72 140Z" stroke="url(#g)" stroke-width="5" fill="none"></path>
+  <!-- main controller -->
+  <path filter="url(#glow)" d="M145 280
+           C145 220 190 190 255 190
+           H267
+           C332 190 377 220 377 280
+           C377 330 345 360 320 360
+           C300 360 295 340 256 340
+           C217 340 212 360 192 360
+           C167 360 145 330 145 280Z" stroke="url(#g)" stroke-width="14" fill="none"></path>
 
-  <!-- кнопки (очень яркие) -->
-  <circle cx="150" cy="126" r="7" fill="#FF2BD6"></circle>
-  <circle cx="166" cy="140" r="7" fill="#00E5FF"></circle>
-  <circle cx="150" cy="156" r="7" fill="#7C4DFF"></circle>
-  <circle cx="134" cy="140" r="7" fill="#00FFB2"></circle>
+  <!-- buttons -->
+  <circle cx="320" cy="250" r="14" fill="#FF2BD6"></circle>
+  <circle cx="345" cy="280" r="14" fill="#00E5FF"></circle>
+  <circle cx="320" cy="310" r="14" fill="#7C4DFF"></circle>
+  <circle cx="295" cy="280" r="14" fill="#00FFB2"></circle>
 
-  <!-- стики -->
-  <circle cx="106" cy="140" r="11" stroke="url(#g)" stroke-width="4"></circle>
-  <circle cx="106" cy="140" r="4" fill="#00E5FF"></circle>
-
+  <!-- stick -->
+  <circle cx="210" cy="285" r="22" stroke="url(#g)" stroke-width="8"></circle>
+  <circle cx="210" cy="285" r="8" fill="#00E5FF"></circle>
 </svg>
