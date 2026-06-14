@@ -38,6 +38,7 @@ export default function AdminPage() {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
+  const [adminToast, setAdminToast] = useState<string | null>(null);
 
   // Articles
   const [articles, setArticles] = useState<Article[]>([]);
@@ -61,6 +62,11 @@ export default function AdminPage() {
     imagePreview: '',
   });
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const showToast = (msg: string) => {
+    setAdminToast(msg);
+    setTimeout(() => setAdminToast(null), 2500);
+  };
 
   const handleLogin = async () => {
     setError('');
@@ -175,11 +181,12 @@ export default function AdminPage() {
       if (res.ok) {
         setModalOpen(false);
         loadData();
+        showToast(editingArticle ? 'Статья обновлена' : 'Статья создана');
       } else {
-        alert('Ошибка сохранения');
+        showToast('Ошибка сохранения');
       }
     } catch {
-      alert('Ошибка сохранения');
+      showToast('Ошибка сохранения');
     }
   };
 
@@ -192,8 +199,9 @@ export default function AdminPage() {
       await fetch(`/api/articles/${deleteConfirm.id}`, { method: 'DELETE' });
       setDeleteConfirm({ open: false, id: '', title: '' });
       loadData();
+      showToast('Статья удалена');
     } catch {
-      alert('Ошибка удаления');
+      showToast('Ошибка удаления');
     }
   };
 
@@ -260,7 +268,9 @@ export default function AdminPage() {
   }
 
   return (
-    <div className="admin" style={{ display: 'flex', height: '100vh', overflow: 'hidden', background: '#0f0f17' }}>
+    <div className="admin" style={{ display: 'flex', height: '100vh', overflow: 'hidden', background: '#0f0f17', position: 'relative' }}>
+      {adminToast && <div className="admin-toast">{adminToast}</div>}
+
       {/* ── Sidebar ── */}
       <aside className="sidebar" style={{ width: '210px', minWidth: '210px', background: '#13131e', borderRight: '1px solid #1e1e30', display: 'flex', flexDirection: 'column', overflowY: 'auto' }}>
         <div className="logo" style={{ padding: '18px 16px 16px', borderBottom: '1px solid #1e1e30', flexShrink: 0 }}>
