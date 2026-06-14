@@ -1,10 +1,16 @@
-﻿<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
   <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="512" y2="512">
+      <stop stop-color="#0B0F1A"></stop>
+      <stop offset="1" stop-color="#111A2E"></stop>
+    </linearGradient>
+
     <linearGradient id="g" x1="0" y1="0" x2="512" y2="512">
       <stop stop-color="#FF2BD6"></stop>
       <stop offset="0.5" stop-color="#7C4DFF"></stop>
       <stop offset="1" stop-color="#00E5FF"></stop>
     </linearGradient>
+
     <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
       <feGaussianBlur stdDeviation="10" result="b"></feGaussianBlur>
       <feMerge>
@@ -13,12 +19,40 @@
       </feMerge>
     </filter>
   </defs>
-  <path filter="url(#glow)" d="M140 280 C140 210 190 170 260 170 H270 C340 170 390 210 390 280 C390 340 350 380 320 380 C300 380 295 360 256 360 C217 360 212 380 192 380 C162 380 140 340 140 280Z" stroke="url(#g)" stroke-width="18" fill="none"></path>
-  <path filter="url(#glow)" d="M145 280 C145 220 190 190 255 190 H267 C332 190 377 220 377 280 C377 330 345 360 320 360 C300 360 295 340 256 340 C217 340 212 360 192 360 C167 360 145 330 145 280Z" stroke="url(#g)" stroke-width="14" fill="none"></path>
+
+  <!-- BACKGROUND (самое важное) -->
+  <rect width="512" height="512" rx="120" fill="url(#bg)"></rect>
+
+  <!-- soft neon circle behind icon -->
+  <circle cx="256" cy="270" r="140" fill="url(#g)" opacity="0.08"></circle>
+
+  <!-- outer glow -->
+  <path filter="url(#glow)" d="M140 280
+           C140 210 190 170 260 170
+           H270
+           C340 170 390 210 390 280
+           C390 340 350 380 320 380
+           C300 380 295 360 256 360
+           C217 360 212 380 192 380
+           C162 380 140 340 140 280Z" stroke="url(#g)" stroke-width="16" fill="none"></path>
+
+  <!-- main controller -->
+  <path filter="url(#glow)" d="M150 280
+           C150 220 195 190 255 190
+           H267
+           C327 190 372 220 372 280
+           C372 330 342 360 320 360
+           C300 360 295 342 256 342
+           C217 342 212 360 192 360
+           C168 360 150 330 150 280Z" stroke="url(#g)" stroke-width="12" fill="none"></path>
+
+  <!-- buttons -->
   <circle cx="320" cy="250" r="14" fill="#FF2BD6"></circle>
   <circle cx="345" cy="280" r="14" fill="#00E5FF"></circle>
   <circle cx="320" cy="310" r="14" fill="#7C4DFF"></circle>
   <circle cx="295" cy="280" r="14" fill="#00FFB2"></circle>
+
+  <!-- stick -->
   <circle cx="210" cy="285" r="22" stroke="url(#g)" stroke-width="8"></circle>
   <circle cx="210" cy="285" r="8" fill="#00E5FF"></circle>
 </svg>
