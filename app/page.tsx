@@ -65,10 +65,10 @@ export default function HomePage() {
   const copyWithToast = async (text: string) => {
     try {
       await navigator.clipboard.writeText(text);
-      setToastMessage('✅ Текст скопирован');
+      setToastMessage('Текст скопирован');
       setTimeout(() => setToastMessage(null), 2000);
     } catch {
-      setToastMessage('❌ Ошибка копирования');
+      setToastMessage('Ошибка копирования');
       setTimeout(() => setToastMessage(null), 2000);
     }
   };

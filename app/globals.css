@@ -456,9 +456,8 @@ body {
 /* ── Toast уведомление ── */
 .toast-notification {
   position: fixed;
-  bottom: 30px;
-  left: 50%;
-  transform: translateX(-50%);
+  top: 20px;
+  right: 20px;
   background: var(--bg-card);
   border: 1px solid var(--purple-lite);
   border-radius: 12px;
@@ -471,8 +470,8 @@ body {
 }
 
 @keyframes toast-in {
-  from { opacity: 0; transform: translateX(-50%) translateY(20px); }
-  to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+  from { opacity: 0; transform: translateX(20px); }
+  to   { opacity: 1; transform: translateX(0); }
 }
 
 /* ── Footer ── */
