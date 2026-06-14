@@ -2,7 +2,6 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
 // Простой in-memory rate limiter
-// В production на Vercel лучше использовать Vercel KV или Edge Config
 const rateLimit = new Map<string, { count: number; resetTime: number }>();
 
 const RATE_LIMIT_MAX = 30;      // макс запросов
@@ -16,12 +15,12 @@ export function middleware(request: NextRequest) {
 
   const now = Date.now();
 
-  // Очистка устаревших записей (раз в 10 запросов)
+  // Очистка устаревших записей (когда накопилось много)
   if (rateLimit.size > 1000) {
     const threshold = now - RATE_LIMIT_WINDOW;
-    for (const [key, val] of rateLimit) {
+    rateLimit.forEach((val, key) => {
       if (val.resetTime < threshold) rateLimit.delete(key);
-    }
+    });
   }
 
   const record = rateLimit.get(ip);
