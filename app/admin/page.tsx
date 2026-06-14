@@ -208,16 +208,16 @@ export default function AdminPage() {
   const totalPages = Math.ceil(filteredArticles.length / ITEMS_PER_PAGE);
   const paginatedArticles = filteredArticles.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
 
-  const getCategoryBadgeClass = (key: string): string => {
-    const map: Record<string, string> = {
-      ps5: 'badge-ps5',
-      ps4: 'badge-ps4',
-      network: 'badge-net',
-      account: 'badge-psn',
-      hardware: 'badge-ps5',
-      games: 'badge-psn',
+  const getCategoryBadgeStyle = (key: string): { background: string; color: string } => {
+    const map: Record<string, { background: string; color: string }> = {
+      ps5:        { background: '#0c1e38', color: '#38bdf8' },
+      ps4:        { background: '#0c1e3c', color: '#60a5fa' },
+      network:    { background: '#0c2c1e', color: '#34d399' },
+      account:    { background: '#1c1540', color: '#c084fc' },
+      hardware:   { background: '#1c1540', color: '#a78bfa' },
+      games:      { background: '#1c1230', color: '#e879f9' },
     };
-    return map[key] || 'badge-psn';
+    return map[key] || { background: '#1c1540', color: '#c084fc' };
   };
 
   // Login screen
@@ -286,7 +286,7 @@ export default function AdminPage() {
             onMouseEnter={(e) => { e.currentTarget.style.background = '#1a1a2e'; e.currentTarget.style.color = '#b0b0d8'; }}
             onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#6a6a8e'; }}
           >
-            <i className="ti ti-home" style={{ fontSize: '17px' }}></i> На сайт
+            <i className="ti ti-arrow-left" style={{ fontSize: '17px' }}></i> На сайт
           </a>
         </nav>
 
@@ -300,9 +300,9 @@ export default function AdminPage() {
               <div className="user-role" style={{ fontSize: '11px', color: '#4a4a6a' }}>Администратор</div>
             </div>
           </div>
-          <div className="logout-btn" onClick={() => setLogoutConfirm(true)} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 10px', color: '#4a4a6a', fontSize: '12px', cursor: 'pointer', marginTop: '4px', borderRadius: '6px', transition: 'background 0.12s, color 0.12s' }}
-            onMouseEnter={(e) => { e.currentTarget.style.color = '#8888aa'; e.currentTarget.style.background = '#1a1a2e'; }}
-            onMouseLeave={(e) => { e.currentTarget.style.color = '#4a4a6a'; e.currentTarget.style.background = 'transparent'; }}
+          <div className="logout-btn" onClick={() => setLogoutConfirm(true)} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 10px', color: '#8888aa', fontSize: '12px', cursor: 'pointer', marginTop: '4px', borderRadius: '6px', border: '1px solid #1e1e30', transition: 'background 0.12s, color 0.12s, border-color 0.12s' }}
+            onMouseEnter={(e) => { e.currentTarget.style.color = '#f87171'; e.currentTarget.style.background = '#2e1010'; e.currentTarget.style.borderColor = '#4a1a1a'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.color = '#8888aa'; e.currentTarget.style.background = 'transparent'; e.currentTarget.style.borderColor = '#1e1e30'; }}
           >
             <i className="ti ti-logout" style={{ fontSize: '15px' }}></i> Выйти
           </div>
@@ -401,7 +401,7 @@ export default function AdminPage() {
                         <span className="code-mono" style={{ fontFamily: "'SF Mono', 'Fira Code', monospace", fontSize: '12px', color: '#4a4a6a' }}>{article.code || '—'}</span>
                       </td>
                       <td style={{ padding: '12px 14px', borderBottom: '1px solid #13131e' }}>
-                        <span className={`badge ${getCategoryBadgeClass(article.category?.key || '')}`} style={{ display: 'inline-flex', alignItems: 'center', padding: '3px 10px', borderRadius: '20px', fontSize: '11px', fontWeight: 500, whiteSpace: 'nowrap', background: '#1c1540', color: '#c084fc' }}>
+                        <span className="badge" style={{ display: 'inline-flex', alignItems: 'center', padding: '3px 10px', borderRadius: '20px', fontSize: '11px', fontWeight: 500, whiteSpace: 'nowrap', ...getCategoryBadgeStyle(article.category?.key || '') }}>
                           {article.category?.name || '—'}
                         </span>
                       </td>
