@@ -34,11 +34,11 @@ interface Article {
   order: number;
 }
 
+const SUPPORT_KEYS = ['ps5', 'ps4', 'network', 'account', 'games'];
+
 const IMG_PREFIX = '/images/';
 
 function getImgSrc(cat: Category): string {
-  if (cat.id) {
-  }
   const map: Record<string, string> = {
     ps5: 'PS-5.png',
     ps4: 'PS-4.png',
@@ -63,12 +63,15 @@ function pluralForm(n: number): string {
 export default function HomePage() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [articles, setArticles] = useState<Article[]>([]);
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
   const [selectedArticle, setSelectedArticle] = useState<Article | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [expandedCategory, setExpandedCategory] = useState<string | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  const supportCategories = categories.filter(c => SUPPORT_KEYS.includes(c.key));
+  const gameCategories = categories.filter(c => !SUPPORT_KEYS.includes(c.key));
 
   const copyWithToast = async (text: string) => {
     try {
@@ -102,7 +105,13 @@ export default function HomePage() {
   }, [searchQuery, selectedCategory]);
 
   const loadCategoryArticles = async (categoryKey: string) => {
-    setSelectedCategory(categoryKey);
+    const cat = categories.find(c => c.key === categoryKey);
+    if (cat && !SUPPORT_KEYS.includes(categoryKey)) {
+      setSelectedCategory(cat);
+      setSelectedArticle(null);
+      setSearchQuery('');
+      return;
+    }
     setSelectedArticle(null);
     setSearchQuery('');
     try {
@@ -137,7 +146,15 @@ export default function HomePage() {
 
   const toggleCategory = (key: string) => {
     setExpandedCategory(expandedCategory === key ? null : key);
-    loadCategoryArticles(key);
+    const cat = categories.find(c => c.key === key);
+    if (cat && !SUPPORT_KEYS.includes(key)) {
+      setSelectedCategory(cat);
+      setSearchQuery('');
+      setSelectedArticle(null);
+      setArticles([]);
+    } else {
+      loadCategoryArticles(key);
+    }
   };
 
   if (isLoading) {
@@ -197,8 +214,50 @@ export default function HomePage() {
     );
   }
 
-  // ─── СПИСОК СТАТЕЙ КАТЕГОРИИ ИЛИ ПОИСК ───
-  if (selectedCategory || searchQuery) {
+  // ─── ИГРОВАЯ КАТЕГОРИЯ (подкатегории с играми) ───
+  if (selectedCategory && !SUPPORT_KEYS.includes(selectedCategory.key)) {
+    return (
+      <div className="layout">
+        <Sidebar
+          categories={categories}
+          searchQuery={searchQuery}
+          setSearchQuery={setSearchQuery}
+          expandedCategory={expandedCategory}
+          toggleCategory={toggleCategory}
+          loadArticle={loadArticle}
+        />
+        <div className="main">
+          <div className="content-area">
+            <a onClick={goHome} className="back-link">← Назад к категориям</a>
+            <div className="section-title">{selectedCategory.name}</div>
+            <div className="game-category-desc">
+              {selectedCategory.description}
+            </div>
+            <div className="game-subcategories">
+              {(selectedCategory.subCategories || []).map((sub) => (
+                <div key={sub.id} className="game-subcategory-card">
+                  <div className="game-subcategory-header">
+                    <h3 className="game-subcategory-title">{sub.name}</h3>
+                    <button className="copy-btn" onClick={() => copyWithToast(sub.games)} title="Копировать список игр">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+                        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+                      </svg>
+                    </button>
+                  </div>
+                  <div className="game-subcategory-games-list">{sub.games}</div>
+                </div>
+              ))}
+            </div>
+            {toastMessage && <div className="toast-notification">{toastMessage}</div>}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ─── СПИСОК СТАТЕЙ КАТЕГОРИИ ПОДДЕРЖКИ ИЛИ ПОИСК ───
+  if ((selectedCategory && SUPPORT_KEYS.includes(selectedCategory.key)) || searchQuery) {
     return (
       <div className="layout">
         <Sidebar
@@ -269,12 +328,12 @@ export default function HomePage() {
         <div className="content-area">
           <div className="section-title">Категории проблем</div>
           <div className="category-grid">
-            {categories.map((cat) => (
+            {supportCategories.map((cat) => (
               <div
                 key={cat.id}
                 className={getCardClass(cat.key)}
                 onClick={() => {
-                  setSelectedCategory(cat.key);
+                  setSelectedCategory(cat);
                   loadCategoryArticles(cat.key);
                 }}
               >
@@ -289,33 +348,60 @@ export default function HomePage() {
                     }}
                   />
                 </div>
-                  <div className="cat-card-content">
-                    <div className={`cat-card-name ${cat.colorClass}`}>{cat.name}</div>
-                    <div className="cat-card-desc">
-                      {cat.description || `Решения для ${cat.name}`}
-                    </div>
-                    {cat.subCategories && cat.subCategories.length > 0 && (
-                      <div className="cat-subcategories">
-                        {cat.subCategories.map((sub) => (
-                          <div key={sub.id} className="cat-subcategory-item">
-                            <div className="cat-subcategory-name">{sub.name}</div>
-                            <div className="cat-subcategory-games">{sub.games}</div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                    <div className="cat-card-footer">
-                      <span className="cat-count" style={{ color: cat.borderColor }}>
-                        {cat._count.articles} {pluralForm(cat._count.articles)}
-                      </span>
-                      {cat.subCategories && cat.subCategories.length > 0 && (
-                        <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
-                          {cat.subCategories.length} подкатегорий
-                        </span>
-                      )}
-                      <span className="cat-arrow">→</span>
-                    </div>
+                <div className="cat-card-content">
+                  <div className={`cat-card-name ${cat.colorClass}`}>{cat.name}</div>
+                  <div className="cat-card-desc">
+                    {cat.description || `Решения для ${cat.name}`}
                   </div>
+                  <div className="cat-card-footer">
+                    <span className="cat-count" style={{ color: cat.borderColor }}>
+                      {cat._count.articles} {pluralForm(cat._count.articles)}
+                    </span>
+                    <span className="cat-arrow">→</span>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="section-title" style={{ marginTop: 40 }}>Категории игр</div>
+          <div className="category-grid">
+            {gameCategories.map((cat) => (
+              <div
+                key={cat.id}
+                className={getCardClass(cat.key)}
+                onClick={() => {
+                  setSelectedCategory(cat);
+                }}
+              >
+                <div className="cat-card-content">
+                  <div className={`cat-card-name ${cat.colorClass}`}>{cat.name}</div>
+                  <div className="cat-card-desc">
+                    {cat.description || `Игры для ${cat.name}`}
+                  </div>
+                  {cat.subCategories && cat.subCategories.length > 0 && (
+                    <div className="cat-subcategories">
+                      {cat.subCategories.slice(0, 3).map((sub) => (
+                        <div key={sub.id} className="cat-subcategory-item">
+                          <div className="cat-subcategory-name">{sub.name}</div>
+                        </div>
+                      ))}
+                      {cat.subCategories.length > 3 && (
+                        <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>
+                          + ещё {cat.subCategories.length - 3}...
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  <div className="cat-card-footer">
+                    {cat.subCategories && cat.subCategories.length > 0 && (
+                      <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>
+                        {cat.subCategories.length} подкатегорий
+                      </span>
+                    )}
+                    <span className="cat-arrow">→</span>
+                  </div>
+                </div>
               </div>
             ))}
           </div>
@@ -364,6 +450,9 @@ function Sidebar({
     loadArticle(article.id);
   };
 
+  const supportCategories = categories.filter(c => SUPPORT_KEYS.includes(c.key));
+  const gameCategories = categories.filter(c => !SUPPORT_KEYS.includes(c.key));
+
   return (
     <aside className="sidebar">
       <div className="logo-wrap">
@@ -388,9 +477,9 @@ function Sidebar({
       </div>
 
       <div className="sidebar-section">
-        <div className="sidebar-label">Категории</div>
+        <div className="sidebar-label">Поддержка</div>
         <ul className="nav-list">
-          {categories.map((cat) => (
+          {supportCategories.map((cat) => (
             <li key={cat.id} className={`nav-item ${expandedCategory === cat.key ? 'active' : ''}`}>
               <a onClick={() => handleToggle(cat.key)} style={{ cursor: 'pointer' }}>
                 <span className="nav-icon">
@@ -418,6 +507,33 @@ function Sidebar({
                 {loadingArticles[cat.key] && (
                   <li style={{ color: 'var(--text-muted)', fontStyle: 'italic' }}>Загрузка...</li>
                 )}
+              </ul>
+            </li>
+          ))}
+        </ul>
+      </div>
+
+      <div className="sidebar-section">
+        <div className="sidebar-label">Игры</div>
+        <ul className="nav-list">
+          {gameCategories.map((cat) => (
+            <li key={cat.id} className={`nav-item ${expandedCategory === cat.key ? 'active' : ''}`}>
+              <a onClick={() => handleToggle(cat.key)} style={{ cursor: 'pointer' }}>
+                <span className="nav-icon" style={{ fontSize: 18, lineHeight: 1 }}>
+                  {cat.name.charAt(0)}
+                </span>
+                {cat.name.slice(1).trim()}
+                <span className="nav-arrow">
+                  {expandedCategory === cat.key ? '▼' : '▶'}
+                </span>
+              </a>
+              <ul className={`sub-articles ${expandedCategory === cat.key ? 'show' : ''}`}>
+                {(cat.subCategories || []).map((sub) => (
+                  <li key={sub.id} style={{ fontSize: 11, color: 'var(--text-muted)', cursor: 'default', padding: '6px 12px' }}>
+                    <strong style={{ color: 'var(--text-dim)' }}>{sub.name}</strong>
+                    <div style={{ marginTop: 2, lineHeight: 1.4, color: 'var(--text-muted)' }}>{sub.games.slice(0, 80)}...</div>
+                  </li>
+                ))}
               </ul>
             </li>
           ))}

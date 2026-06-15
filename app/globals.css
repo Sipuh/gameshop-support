@@ -347,6 +347,46 @@ body {
   color: var(--text-muted);
 }
 
+/* Игровые категории - подкатегории */
+.game-category-desc {
+  font-size: 14px;
+  color: var(--text-dim);
+  margin-bottom: 24px;
+  line-height: 1.5;
+}
+.game-subcategories {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.game-subcategory-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 20px 24px;
+  transition: border-color 0.2s;
+}
+.game-subcategory-card:hover {
+  border-color: var(--purple-lite);
+}
+.game-subcategory-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+.game-subcategory-title {
+  font-family: 'Exo 2', sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-main);
+}
+.game-subcategory-games-list {
+  font-size: 13px;
+  line-height: 1.7;
+  color: var(--text-dim);
+}
+
 .cat-count {
   font-size: 13px;
   font-weight: 600;
