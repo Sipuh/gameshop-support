@@ -423,6 +423,69 @@ body {
   gap: 12px;
 }
 
+/* Список игр в модалке (через •) */
+.game-modal-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.game-modal-list li {
+  position: relative;
+  padding-left: 16px;
+  font-size: 13px;
+  line-height: 1.8;
+  color: var(--text-dim);
+}
+.game-modal-list li::before {
+  content: '•';
+  position: absolute;
+  left: 0;
+  color: var(--purple-lite);
+}
+
+/* Карточка игровой категории (с картинкой) */
+.game-category-grid .game-card {
+  display: block;
+  text-decoration: none;
+  background: var(--bg-card);
+  border-radius: 16px;
+  overflow: hidden;
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+  position: relative;
+  flex: 0 1 200px;
+  width: 200px;
+  border: 2px solid var(--border);
+  cursor: pointer;
+  min-height: 160px;
+}
+.game-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 0 16px rgba(124,58,237,0.3);
+  border-color: var(--purple-lite);
+}
+.game-card-img-wrap {
+  width: 100%;
+  height: 100px;
+  overflow: hidden;
+  background: var(--bg-hover);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.game-card-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.game-card-name {
+  padding: 10px 12px;
+  font-family: 'Exo 2', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-main);
+  line-height: 1.3;
+}
+
 /* Игровые категории - подкатегории */
 .game-category-desc {
   font-size: 14px;

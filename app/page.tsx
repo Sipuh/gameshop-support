@@ -173,6 +173,7 @@ export default function HomePage() {
           expandedCategory={expandedCategory}
           toggleCategory={toggleCategory}
           loadArticle={loadArticle}
+          setGameModalCat={setGameModalCat}
         />
         <div className="main">
           <div className="content-area">
@@ -219,17 +220,18 @@ export default function HomePage() {
   if ((selectedCategory && SUPPORT_KEYS.includes(selectedCategory.key)) || searchQuery) {
     return (
       <div className="layout">
-        <Sidebar
-          categories={categories}
-          searchQuery={searchQuery}
-          setSearchQuery={setSearchQuery}
-          expandedCategory={expandedCategory}
-          toggleCategory={toggleCategory}
-          loadArticle={loadArticle}
-        />
-        <div className="main">
-          <div className="content-area">
-            <a onClick={goHome} className="back-link">← Назад к категориям</a>
+      <Sidebar
+        categories={categories}
+        searchQuery={searchQuery}
+        setSearchQuery={setSearchQuery}
+        expandedCategory={expandedCategory}
+        toggleCategory={toggleCategory}
+        loadArticle={loadArticle}
+        setGameModalCat={setGameModalCat}
+      />
+      <div className="main">
+        <div className="content-area">
+          <a onClick={goHome} className="back-link">← Назад к категориям</a>
             <div className="section-title">
               {searchQuery
                 ? `Результаты поиска (${articles.length})`
@@ -269,6 +271,7 @@ export default function HomePage() {
         expandedCategory={expandedCategory}
         toggleCategory={toggleCategory}
         loadArticle={loadArticle}
+        setGameModalCat={setGameModalCat}
       />
       <div className="main">
         <section className="hero">
@@ -324,41 +327,26 @@ export default function HomePage() {
           </div>
 
           <div className="section-title" style={{ marginTop: 40 }}>Категории игр</div>
-          <div className="category-grid">
+          <div className="category-grid game-category-grid">
             {gameCategories.map((cat) => (
               <div
                 key={cat.id}
-                className={getCardClass(cat.key)}
+                className={`game-card`}
                 onClick={() => setGameModalCat(cat)}
               >
-                <div className="cat-card-content">
-                  <div className={`cat-card-name ${cat.colorClass}`}>{cat.name}</div>
-                  <div className="cat-card-desc">
-                    {cat.description || `Игры для ${cat.name}`}
-                  </div>
-                  {cat.subCategories && cat.subCategories.length > 0 && (
-                    <div className="cat-subcategories">
-                      {cat.subCategories.slice(0, 3).map((sub) => (
-                        <div key={sub.id} className="cat-subcategory-item">
-                          <div className="cat-subcategory-name">{sub.name}</div>
-                        </div>
-                      ))}
-                      {cat.subCategories.length > 3 && (
-                        <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>
-                          + ещё {cat.subCategories.length - 3}...
-                        </div>
-                      )}
-                    </div>
-                  )}
-                  <div className="cat-card-footer">
-                    {cat.subCategories && cat.subCategories.length > 0 && (
-                      <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>
-                        {cat.subCategories.length} подкатегорий
-                      </span>
-                    )}
-                    <span className="cat-arrow">→</span>
-                  </div>
+                <div className="game-card-img-wrap">
+                  <img
+                    className="game-card-img"
+                    src={`/api/categories/${cat.id}/image`}
+                    alt={cat.name}
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement;
+                      target.style.display = 'none';
+                    }}
+                  />
                 </div>
+                <div className="game-card-name">{cat.name}</div>
+                <span className="cat-arrow" style={{ position: 'absolute', right: 12, bottom: 12 }}>→</span>
               </div>
             ))}
           </div>
@@ -374,8 +362,7 @@ export default function HomePage() {
               <h2 className="game-modal-title">{gameModalCat.name}</h2>
               <button className="game-modal-close" onClick={() => setGameModalCat(null)}>✕</button>
             </div>
-            <div className="game-modal-desc">{gameModalCat.description}</div>
-            <div className="game-modal-body">
+            <div className="game-modal-body" style={{ paddingTop: 16 }}>
               {(gameModalCat.subCategories || []).map((sub) => (
                 <div key={sub.id} className="game-subcategory-card">
                   <div className="game-subcategory-header">
@@ -387,7 +374,11 @@ export default function HomePage() {
                       </svg>
                     </button>
                   </div>
-                  <div className="game-subcategory-games-list">{sub.games}</div>
+                  <ul className="game-modal-list">
+                    {sub.games.split('\n').map((g, i) => (
+                      <li key={i}>{g.trim()}</li>
+                    ))}
+                  </ul>
                 </div>
               ))}
             </div>
@@ -407,6 +398,7 @@ function Sidebar({
   expandedCategory,
   toggleCategory,
   loadArticle,
+  setGameModalCat,
 }: {
   categories: Category[];
   searchQuery: string;
@@ -414,6 +406,7 @@ function Sidebar({
   expandedCategory: string | null;
   toggleCategory: (key: string) => void;
   loadArticle: (id: string) => void;
+  setGameModalCat: (cat: Category | null) => void;
 }) {
   const [subArticles, setSubArticles] = useState<Record<string, Article[]>>({});
   const [loadingArticles, setLoadingArticles] = useState<Record<string, boolean>>({});
@@ -506,11 +499,11 @@ function Sidebar({
         <ul className="nav-list">
           {gameCategories.map((cat) => (
             <li key={cat.id} className={`nav-item ${expandedCategory === cat.key ? 'active' : ''}`}>
-              <a onClick={() => handleToggle(cat.key)} style={{ cursor: 'pointer' }}>
+              <a onClick={(e) => { e.stopPropagation(); setGameModalCat(cat); }} style={{ cursor: 'pointer' }}>
                 <span className="nav-icon" style={{ fontSize: 18, lineHeight: 1 }}>
-                  {cat.name.charAt(0)}
+                  🎮
                 </span>
-                {cat.name.slice(1).trim()}
+                {cat.name}
                 <span className="nav-arrow">
                   {expandedCategory === cat.key ? '▼' : '▶'}
                 </span>
