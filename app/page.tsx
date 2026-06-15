@@ -159,7 +159,16 @@ export default function HomePage() {
   };
 
   if (isLoading) {
-    return <div className="loading">Загрузка...</div>;
+    return (
+      <div className="loading-screen">
+        <div className="loading-spinner">
+          <div className="loading-icon">🎮</div>
+          <div className="loading-dots">
+            <span></span><span></span><span></span>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   // ─── СТРАНИЦА СТАТЬИ ───
