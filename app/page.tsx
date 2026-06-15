@@ -69,6 +69,7 @@ export default function HomePage() {
   const [isLoading, setIsLoading] = useState(true);
   const [expandedCategory, setExpandedCategory] = useState<string | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [gameModalCat, setGameModalCat] = useState<Category | null>(null);
 
   const supportCategories = categories.filter(c => SUPPORT_KEYS.includes(c.key));
   const gameCategories = categories.filter(c => !SUPPORT_KEYS.includes(c.key));
@@ -214,48 +215,6 @@ export default function HomePage() {
     );
   }
 
-  // ─── ИГРОВАЯ КАТЕГОРИЯ (подкатегории с играми) ───
-  if (selectedCategory && !SUPPORT_KEYS.includes(selectedCategory.key)) {
-    return (
-      <div className="layout">
-        <Sidebar
-          categories={categories}
-          searchQuery={searchQuery}
-          setSearchQuery={setSearchQuery}
-          expandedCategory={expandedCategory}
-          toggleCategory={toggleCategory}
-          loadArticle={loadArticle}
-        />
-        <div className="main">
-          <div className="content-area">
-            <a onClick={goHome} className="back-link">← Назад к категориям</a>
-            <div className="section-title">{selectedCategory.name}</div>
-            <div className="game-category-desc">
-              {selectedCategory.description}
-            </div>
-            <div className="game-subcategories">
-              {(selectedCategory.subCategories || []).map((sub) => (
-                <div key={sub.id} className="game-subcategory-card">
-                  <div className="game-subcategory-header">
-                    <h3 className="game-subcategory-title">{sub.name}</h3>
-                    <button className="copy-btn" onClick={() => copyWithToast(sub.games)} title="Копировать список игр">
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
-                        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
-                      </svg>
-                    </button>
-                  </div>
-                  <div className="game-subcategory-games-list">{sub.games}</div>
-                </div>
-              ))}
-            </div>
-            {toastMessage && <div className="toast-notification">{toastMessage}</div>}
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   // ─── СПИСОК СТАТЕЙ КАТЕГОРИИ ПОДДЕРЖКИ ИЛИ ПОИСК ───
   if ((selectedCategory && SUPPORT_KEYS.includes(selectedCategory.key)) || searchQuery) {
     return (
@@ -370,9 +329,7 @@ export default function HomePage() {
               <div
                 key={cat.id}
                 className={getCardClass(cat.key)}
-                onClick={() => {
-                  setSelectedCategory(cat);
-                }}
+                onClick={() => setGameModalCat(cat)}
               >
                 <div className="cat-card-content">
                   <div className={`cat-card-name ${cat.colorClass}`}>{cat.name}</div>
@@ -407,6 +364,37 @@ export default function HomePage() {
           </div>
         </div>
       </div>
+
+      {/* ── МОДАЛЬНОЕ ОКНО ИГРОВОЙ КАТЕГОРИИ ── */}
+      {gameModalCat && (
+        <>
+          <div className="game-modal-overlay" onClick={() => setGameModalCat(null)}></div>
+          <div className="game-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="game-modal-header">
+              <h2 className="game-modal-title">{gameModalCat.name}</h2>
+              <button className="game-modal-close" onClick={() => setGameModalCat(null)}>✕</button>
+            </div>
+            <div className="game-modal-desc">{gameModalCat.description}</div>
+            <div className="game-modal-body">
+              {(gameModalCat.subCategories || []).map((sub) => (
+                <div key={sub.id} className="game-subcategory-card">
+                  <div className="game-subcategory-header">
+                    <h3 className="game-subcategory-title">{sub.name}</h3>
+                    <button className="copy-btn" onClick={() => copyWithToast(sub.games)} title="Копировать список игр">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+                        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+                      </svg>
+                    </button>
+                  </div>
+                  <div className="game-subcategory-games-list">{sub.games}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </>
+      )}
+      {toastMessage && <div className="toast-notification">{toastMessage}</div>}
     </div>
   );
 }
