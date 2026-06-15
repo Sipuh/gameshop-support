@@ -162,10 +162,9 @@ export default function HomePage() {
     return (
       <div className="loading-screen">
         <div className="loading-spinner">
-          <div className="loading-icon">🎮</div>
-          <div className="loading-dots">
-            <span></span><span></span><span></span>
-          </div>
+          <div className="loader-ring"></div>
+          <div className="loader-text">GAMESHOP</div>
+          <div className="loader-bar"><span></span></div>
         </div>
       </div>
     );
