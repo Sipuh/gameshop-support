@@ -12,6 +12,10 @@ const categorySelect = {
   order: true,
   createdAt: true,
   updatedAt: true,
+  subCategories: {
+    select: { id: true, name: true, games: true, order: true },
+    orderBy: { order: 'asc' },
+  },
   _count: {
     select: { articles: true },
   },

@@ -2,6 +2,13 @@
 
 import { useEffect, useState } from 'react';
 
+interface SubCategory {
+  id: string;
+  name: string;
+  games: string;
+  order: number;
+}
+
 interface Category {
   id: string;
   key: string;
@@ -11,6 +18,7 @@ interface Category {
   borderColor: string;
   icon: string | null;
   order: number;
+  subCategories: SubCategory[];
   _count: { articles: number };
 }
 
@@ -281,18 +289,33 @@ export default function HomePage() {
                     }}
                   />
                 </div>
-                <div className="cat-card-content">
-                  <div className={`cat-card-name ${cat.colorClass}`}>{cat.name}</div>
-                  <div className="cat-card-desc">
-                    {cat.description || `Решения для ${cat.name}`}
+                  <div className="cat-card-content">
+                    <div className={`cat-card-name ${cat.colorClass}`}>{cat.name}</div>
+                    <div className="cat-card-desc">
+                      {cat.description || `Решения для ${cat.name}`}
+                    </div>
+                    {cat.subCategories && cat.subCategories.length > 0 && (
+                      <div className="cat-subcategories">
+                        {cat.subCategories.map((sub) => (
+                          <div key={sub.id} className="cat-subcategory-item">
+                            <div className="cat-subcategory-name">{sub.name}</div>
+                            <div className="cat-subcategory-games">{sub.games}</div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    <div className="cat-card-footer">
+                      <span className="cat-count" style={{ color: cat.borderColor }}>
+                        {cat._count.articles} {pluralForm(cat._count.articles)}
+                      </span>
+                      {cat.subCategories && cat.subCategories.length > 0 && (
+                        <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
+                          {cat.subCategories.length} подкатегорий
+                        </span>
+                      )}
+                      <span className="cat-arrow">→</span>
+                    </div>
                   </div>
-                  <div className="cat-card-footer">
-                    <span className="cat-count" style={{ color: cat.borderColor }}>
-                      {cat._count.articles} {pluralForm(cat._count.articles)}
-                    </span>
-                    <span className="cat-arrow">→</span>
-                  </div>
-                </div>
               </div>
             ))}
           </div>
@@ -369,7 +392,7 @@ function Sidebar({
         <ul className="nav-list">
           {categories.map((cat) => (
             <li key={cat.id} className={`nav-item ${expandedCategory === cat.key ? 'active' : ''}`}>
-              <a onClick={() => handleToggle(cat.key)}>
+              <a onClick={() => handleToggle(cat.key)} style={{ cursor: 'pointer' }}>
                 <span className="nav-icon">
                   <img
                     className="sidebar-icon-img"

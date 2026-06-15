@@ -320,6 +320,33 @@ body {
   align-items: center;
   justify-content: space-between;
 }
+/* Подкатегории внутри карточки */
+.cat-subcategories {
+  margin: 10px 0 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.cat-subcategory-item {
+  background: rgba(255,255,255,0.03);
+  border-radius: 8px;
+  padding: 8px 10px;
+  border-left: 2px solid var(--border);
+}
+.cat-subcategory-name {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-dim);
+  margin-bottom: 4px;
+}
+.cat-subcategory-games {
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--text-muted);
+}
+
 .cat-count {
   font-size: 13px;
   font-weight: 600;

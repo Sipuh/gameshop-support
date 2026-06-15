@@ -33,8 +33,20 @@ model Category {
   updatedAt   DateTime  @updatedAt
 
   articles    Article[]
+  subCategories SubCategory[]
 
   @@map("categories")
+}
+
+model SubCategory {
+  id          String   @id @default(cuid())
+  name        String
+  games       String   // список игр через запятую
+  categoryId  String
+  category    Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  order       Int      @default(0)
+
+  @@map("sub_categories")
 }
 
 model Article {

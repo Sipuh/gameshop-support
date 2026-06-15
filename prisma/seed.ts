@@ -1,30 +1,7 @@
 import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
-import * as fs from 'fs';
-import * as path from 'path';
 
 const prisma = new PrismaClient();
-
-function loadImageAsBuffer(relativePath: string): Buffer | null {
-  try {
-    // Ищем файл относительно корня проекта
-    const possiblePaths = [
-      path.join(__dirname, '..', 'public', relativePath),
-      path.join(__dirname, '..', relativePath),
-    ];
-    
-    for (const filePath of possiblePaths) {
-      if (fs.existsSync(filePath)) {
-        console.log(`  Загружаю изображение: ${filePath}`);
-        return fs.readFileSync(filePath);
-      }
-    }
-    
-    return null;
-  } catch {
-    return null;
-  }
-}
 
 async function main() {
   console.log('🌱 Seeding database...');
@@ -43,8 +20,8 @@ async function main() {
   });
   console.log(`Пользователь: ${admin.email} / пароль: admin123`);
 
-  // Категории
-  const categoryData = [
+  // Категории (техподдержка)
+  const supportCategoryData = [
     {
       key: 'ps5',
       name: 'Ошибки PS5',
@@ -93,33 +70,273 @@ async function main() {
   ];
 
   const categories = await Promise.all(
-    categoryData.map(async (cat) => {
-      // Загружаем изображение в БД, если файл существует
-      const imageBuffer = loadImageAsBuffer(cat.icon);
-      
+    supportCategoryData.map(async (cat) => {
       const category = await prisma.category.upsert({
         where: { key: cat.key },
-        update: {
-          imageData: imageBuffer,
-        },
-        create: {
-          ...cat,
-          imageData: imageBuffer,
-        },
+        update: {},
+        create: { ...cat },
       });
-      
-      if (imageBuffer) {
-        console.log(`  Изображение для "${cat.name}": ${imageBuffer.length} байт`);
-      } else {
-        console.log(`  Изображение для "${cat.name}": файл не найден (${cat.icon})`);
-      }
-      
       return category;
     })
   );
-  console.log(`Создано ${categories.length} категорий`);
+  console.log(`Создано ${categories.length} категорий поддержки`);
 
-  // Статьи
+  // Создаём новые игровые категории с подкатегориями
+  const gameCategories: {
+    key: string;
+    name: string;
+    description: string;
+    colorClass: string;
+    borderColor: string;
+    icon: string;
+    order: number;
+    subCategories: { name: string; games: string; order: number }[];
+  }[] = [
+    {
+      key: 'coop',
+      name: '🎮 На двоих (Кооператив)',
+      description: 'Лучшие игры для совместного прохождения',
+      colorClass: 'c-purple',
+      borderColor: '#a855f7',
+      icon: '/images/coop.png',
+      order: 6,
+      subCategories: [
+        { name: 'Экшн-кооператив', games: 'ARK Survival Ascended, Borderlands 3, Resident Evil 5/6, Tiny Tina\'s PS4, Split Fiction PS5, Contra Operation Galuga', order: 1 },
+        { name: 'Приключения', games: 'Baldurs Gate 3, A Way Out, It Takes Two, Brothers: A Tale of Two Sons PS5', order: 2 },
+        { name: 'Файтинги / Спорт', games: 'UFC 4/5, Mortal Kombat 11/1, Injustice 2, FIFA 24, Gran Turismo 7, NBA 24, Tekken 7/8', order: 3 },
+        { name: 'Платформеры / Казуальные', games: 'SpongeBob (только кооператив), Sackboy, Overcooked, Crash Bandicoot Trilogy + CTR Nitro Fueled, Cuphead, Unravel Two', order: 4 },
+        { name: 'Гонки', games: 'WRC 10, CARS 3, Team Sonic Racing', order: 5 },
+      ],
+    },
+    {
+      key: 'racing',
+      name: '🏎 Гонки',
+      description: 'Гоночные симуляторы и аркады',
+      colorClass: 'c-orange',
+      borderColor: '#f97316',
+      icon: '/images/racing.png',
+      order: 7,
+      subCategories: [
+        { name: 'Симуляторы', games: 'Assetto Corsa Competizione, Gran Turismo 7, EA Sports WRC, F1 2023, WRC 10', order: 1 },
+        { name: 'Аркадные гонки', games: 'The Crew Motorsport, NFS Unbound, Need for Speed (2015), NFS Heat, NFS Payback, The Crew 2 Gold/Special Ed', order: 2 },
+        { name: 'Внедорожники', games: 'Dirt 5, SnowRunner, MudRunner, Wreckfest, Cars 3', order: 3 },
+        { name: 'Мотоциклы', games: 'MotoGP 23/22', order: 4 },
+        { name: 'Казуальные', games: 'Hot Wheels Unleashed 1/2, Kayak VR Mirage, Team Sonic Racing', order: 5 },
+      ],
+    },
+    {
+      key: 'four_players',
+      name: '👥 На четверых',
+      description: 'Игры для компании до 4 человек',
+      colorClass: 'c-pink',
+      borderColor: '#ec4899',
+      icon: '/images/four.png',
+      order: 8,
+      subCategories: [
+        { name: 'Кооператив', games: 'Overcooked, Sackboy, Minecraft, Goat Simulator, Crash Bandicoot (серия), Dirt 5', order: 1 },
+        { name: 'Приключения', games: 'Cars 3, Tiny Tina\'s Wonderland (PS5)', order: 2 },
+      ],
+    },
+    {
+      key: 'strategy',
+      name: '⚔️ Стратегии',
+      description: 'Тактические и стратегические игры',
+      colorClass: 'c-teal',
+      borderColor: '#14b8a6',
+      icon: '/images/strategy.png',
+      order: 9,
+      subCategories: [
+        { name: 'Тактика', games: 'Aliens: Dark Descent, Worms Battlegrounds + WMD, Plants vs Zombies: Garden Warfare', order: 1 },
+        { name: 'Глобальные', games: 'Anno 1800, Sid Meier\'s Civilization, Mount & Blade 2', order: 2 },
+        { name: 'Варгеймы', games: 'Warhammer 40000: Rogue Trader, Warhammer Age of Sigmar: Realms of Ruin', order: 3 },
+        { name: 'Симуляторы', games: 'MudRunner, SnowRunner', order: 4 },
+      ],
+    },
+    {
+      key: 'adventure',
+      name: '🕵️ Приключения / Одиночка',
+      description: 'Сюжетные одиночные приключения',
+      colorClass: 'c-blue',
+      borderColor: '#3b82f6',
+      icon: '/images/adventure.png',
+      order: 10,
+      subCategories: [
+        { name: 'Сюжетные блокбастеры', games: 'Alan Wake 1/2, Assassin\'s Creed (Odyssey/Valhalla/Mirage), Cyberpunk 2077, Death Stranding, Spider-Man (все части), Star Wars Jedi (оба)', order: 1 },
+        { name: 'Хорроры', games: 'Bloodborne, Dead Space, Demon Souls, The Invincible, Chernobylite', order: 2 },
+        { name: 'Экшн', games: 'Atomic Heart, Ведьмак 3, Dead Island 2, Dying Light 2, Elden Ring, Evil West, Ghostrunner 2, RoboCop', order: 3 },
+        { name: 'Метроидвании', games: 'Blasphemous 2, Tunic, Prince of Persia', order: 4 },
+        { name: 'Головоломки', games: 'The Talos Principle 2, DEATHLOOP, Wolfenstein', order: 5 },
+      ],
+    },
+    {
+      key: 'simulator',
+      name: '🚜 Симулятор',
+      description: 'Симуляторы жизни, техники и физики',
+      colorClass: 'c-yellow',
+      borderColor: '#eab308',
+      icon: '/images/simulator.png',
+      order: 11,
+      subCategories: [
+        { name: 'Техника', games: 'Farming Tractor Simulator, MudRunner, SnowRunner', order: 1 },
+        { name: 'Животные', games: 'Goat Simulator, Wobbledogs, Way of the Hunter', order: 2 },
+        { name: 'Физика', games: 'Human Fall Flat, Job Simulator', order: 3 },
+        { name: 'Парк', games: 'Jurassic World Evolution 2', order: 4 },
+      ],
+    },
+    {
+      key: 'stealth',
+      name: '🥷 Стелс-Экшн',
+      description: 'Скрытные прохождения и тактические операции',
+      colorClass: 'c-purple',
+      borderColor: '#8b5cf6',
+      icon: '/images/stealth.png',
+      order: 12,
+      subCategories: [
+        { name: 'Стелс', games: 'Dishonored 2, Hitman 3, Sniper Elite 4/5, Ghost of Tsushima, Aliens: Dark Descent', order: 1 },
+        { name: 'Экшн-стелс', games: 'A Plague Tale (обе части), Batman: Arkham Collection, Metro (Exodus/Saga)', order: 2 },
+      ],
+    },
+    {
+      key: 'shooter',
+      name: '🔫 Шутер',
+      description: 'Шутеры от первого и третьего лица',
+      colorClass: 'c-orange',
+      borderColor: '#f97316',
+      icon: '/images/shooter.png',
+      order: 13,
+      subCategories: [
+        { name: 'Тактические', games: 'Rainbow Six Siege, Insurgency: Sandstorm, PayDay 3, Back 4 Blood', order: 1 },
+        { name: 'Сюжетные', games: 'Atomic Heart, Avatar, Call of Duty (серия), Battlefield (серия), Far Cry 5/6, Skull and Bones', order: 2 },
+        { name: 'Выживание', games: 'DayZ, Days Gone, Chernobylite, A Plague Tale: Requiem', order: 3 },
+        { name: 'Экшн-шутеры', games: 'Armored Core VI, Ratchet & Clank, Tiny Tina\'s Wonderlands', order: 4 },
+      ],
+    },
+    {
+      key: 'action_adventure',
+      name: '🗡 Приключенческий Боевик',
+      description: 'Экшн-приключения с открытым миром',
+      colorClass: 'c-purple',
+      borderColor: '#a855f7',
+      icon: '/images/action.png',
+      order: 14,
+      subCategories: [
+        { name: 'Открытый мир', games: 'Cyberpunk 2077, GTA V/Trilogy, Red Dead Redemption 1/2, Horizon, Watch Dogs, Days Gone, Hogwarts Legacy', order: 1 },
+        { name: 'Сюжетные', games: 'Assassin\'s Creed (серия), God of War (все части), Uncharted, Mafia Trilogy, A Way Out, Detroit, Prince of Persia, Batman', order: 2 },
+        { name: 'Ролевые', games: 'Borderlands 3, Atomic Heart, Alan Wake, Devil May Cry 5', order: 3 },
+      ],
+    },
+    {
+      key: 'horror',
+      name: '😱 Ужасы / Выживание',
+      description: 'Хорроры на выживание',
+      colorClass: 'c-pink',
+      borderColor: '#d946ef',
+      icon: '/images/horror.png',
+      order: 15,
+      subCategories: [
+        { name: 'Классические', games: 'Resident Evil (серия), Dead Space, The Callisto Protocol, Alan Wake 2', order: 1 },
+        { name: 'Кооперативные', games: 'Back 4 Blood, Dead Island 2, Dying Light 2, The Forest, Texas Chain Saw Massacre', order: 2 },
+        { name: 'Сюжетные', games: 'Dark Pictures (серия), The Quarry, Little Nightmares, Scorn, Among Us, Metro', order: 3 },
+        { name: 'Выживание', games: 'Chernobylite, DayZ', order: 4 },
+      ],
+    },
+    {
+      key: 'platformer',
+      name: '🎮 Платформер',
+      description: 'Платформеры всех видов',
+      colorClass: 'c-blue',
+      borderColor: '#60a5fa',
+      icon: '/images/platformer.png',
+      order: 16,
+      subCategories: [
+        { name: '3D-платформеры', games: 'Sackboy, Sonic (Frontiers/Forces/Superstars), SpongeBob, Crash Bandicoot 4, Ratchet & Clank, Kena: Bridge of Spirits', order: 1 },
+        { name: '2D-платформеры', games: 'Cuphead, Unravel Bundle, Little Big Planet 3', order: 2 },
+        { name: 'Экшн-платформеры', games: 'Prince of Persia, Returnal', order: 3 },
+      ],
+    },
+    {
+      key: 'rpg',
+      name: '🧙 Ролевая игра (RPG)',
+      description: 'Ролевые игры всех поджанров',
+      colorClass: 'c-teal',
+      borderColor: '#2dd4bf',
+      icon: '/images/rpg.png',
+      order: 17,
+      subCategories: [
+        { name: 'JRPG', games: 'Final Fantasy 16, Tales of Arise', order: 1 },
+        { name: 'Action RPG', games: 'Bloodborne, Cyberpunk 2077, Elden Ring, Wo Long, Sekiro, Lies of P, Lords of the Fallen, Remnant 2', order: 2 },
+        { name: 'CRPG', games: 'Baldur\'s Gate 3, Diablo 2/4', order: 3 },
+        { name: 'Открытый мир RPG', games: 'Skyrim, Hogwarts Legacy, Horizon, Atomic Heart, DayZ, Forspoken', order: 4 },
+        { name: 'Стелс-RPG', games: 'Among Us, Atomic Heart', order: 5 },
+      ],
+    },
+    {
+      key: 'bundles',
+      name: '📦 Паки с играми',
+      description: 'Сборники и комплекты игр',
+      colorClass: 'c-yellow',
+      borderColor: '#eab308',
+      icon: '/images/bundles.png',
+      order: 18,
+      subCategories: [
+        { name: 'Экшн-паки', games: 'Assassin\'s Creed Triple Pack, Batman: Arkham Collection, Crash Bandicoot Quadrilogy, Cuphead Bundle, Devil May Cry 5 + Vergil, EA Star Wars Triple, Far Cry 5 + New Dawn, GTA Trilogy', order: 1 },
+        { name: 'Приключенческие паки', games: 'It Takes Two & A Way Out, Little Nightmares 1+2, Mafia Trilogy, Metro Saga, Middle-earth Bundle, Sherlock Holmes Bundle, Tomb Raider Trilogy', order: 2 },
+        { name: 'Семейные паки', games: 'LEGO DC Heroes/Villains, Monopoly Pack, Overcooked Bundle, Worms Bundle', order: 3 },
+        { name: 'Хоррор-паки', games: 'Resident Evil (разные сборники)', order: 4 },
+        { name: 'Спортивные паки', games: 'Unravel Bundle', order: 5 },
+      ],
+    },
+    {
+      key: 'openworld',
+      name: '🌍 Открытый Мир',
+      description: 'Игры с огромными открытыми мирами',
+      colorClass: 'c-teal',
+      borderColor: '#14b8a6',
+      icon: '/images/openworld.png',
+      order: 19,
+      subCategories: [
+        { name: 'Экшн-приключения', games: 'GTA V, Watch Dogs, Assassin\'s Creed (Одиссея/Вальгалла/Мираж), Cyberpunk 2077, Horizon, Red Dead Redemption, Days Gone', order: 1 },
+        { name: 'RPG', games: 'Ведьмак 3, Skyrim, Hogwarts Legacy, Biomutant', order: 2 },
+        { name: 'Хоррор', games: 'Death Stranding, Far Cry 5/6, Dying Light 2', order: 3 },
+      ],
+    },
+    {
+      key: 'music_fighting_sandbox',
+      name: '🎸 Музыка / Файтинг / Песочница',
+      description: 'Музыкальные, файтинги и песочницы',
+      colorClass: 'c-pink',
+      borderColor: '#ec4899',
+      icon: '/images/music.png',
+      order: 20,
+      subCategories: [
+        { name: 'Музыка', games: 'Beat Saber', order: 1 },
+        { name: 'Файтинги', games: 'Mortal Kombat, Street Fighter, Tekken, UFC', order: 2 },
+        { name: 'Песочница', games: 'Minecraft', order: 3 },
+      ],
+    },
+  ];
+
+  for (const catData of gameCategories) {
+    const category = await prisma.category.upsert({
+      where: { key: catData.key },
+      update: { name: catData.name, description: catData.description, colorClass: catData.colorClass, borderColor: catData.borderColor, icon: catData.icon, order: catData.order },
+      create: { key: catData.key, name: catData.name, description: catData.description, colorClass: catData.colorClass, borderColor: catData.borderColor, icon: catData.icon, order: catData.order },
+    });
+    console.log(`Категория "${catData.name}" создана`);
+
+    // Удаляем старые подкатегории и создаём новые
+    await prisma.subCategory.deleteMany({ where: { categoryId: category.id } });
+    for (const sub of catData.subCategories) {
+      await prisma.subCategory.create({
+        data: { name: sub.name, games: sub.games, categoryId: category.id, order: sub.order },
+      });
+    }
+    console.log(`  Создано ${catData.subCategories.length} подкатегорий`);
+  }
+
+  console.log(`Создано ${gameCategories.length} игровых категорий`);
+
+  // Статьи (примеры)
   const articleData: {
     title: string;
     code: string | null;
@@ -178,7 +395,8 @@ async function main() {
     },
   ];
 
-  const categoryMap = new Map(categories.map((c) => [c.key, c]));
+  const categoryMap = new Map(supportCategoryData.map((c) => [c.key, null as any]));
+  for (const c of await prisma.category.findMany()) categoryMap.set(c.key, c);
   for (const article of articleData) {
     const category = categoryMap.get(article.categoryKey);
     if (!category) continue;
