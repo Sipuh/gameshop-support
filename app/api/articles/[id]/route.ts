@@ -44,6 +44,8 @@ export async function PUT(
         image: body.image || null,
         categoryId: body.categoryId,
         order: body.order || 0,
+        isGuide: body.isGuide || false,
+        images: body.images ? JSON.stringify(body.images) : null,
       },
       include: { category: true },
     });

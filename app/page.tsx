@@ -34,7 +34,7 @@ interface Article {
   order: number;
 }
 
-const SUPPORT_KEYS = ['ps5', 'ps4', 'network', 'account', 'games'];
+const SUPPORT_KEYS = ['ps5', 'ps4', 'network', 'account', 'games', 'guides', 'p2p3', 'deactivation'];
 
 const IMG_PREFIX = '/images/';
 
@@ -128,6 +128,9 @@ export default function HomePage() {
     try {
       const res = await fetch(`/api/articles/${articleId}`);
       const data = await res.json();
+      if (data.images && typeof data.images === 'string') {
+        try { data.images = JSON.parse(data.images); } catch { data.images = []; }
+      }
       setSelectedArticle(data);
     } catch {
       setSelectedArticle(null);

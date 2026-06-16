@@ -8,6 +8,17 @@ export async function GET(req: NextRequest) {
 
     const where = category ? { category: { key: category } } : {};
 
+    const isGuide = searchParams.get('guide') === 'true';
+    if (isGuide) {
+      const whereGuide = { isGuide: true, ...(category ? { category: { key: category } } : {}) };
+      const articles = await prisma.article.findMany({
+        where: whereGuide,
+        include: { category: true },
+        orderBy: { order: 'asc' },
+      });
+      return NextResponse.json(articles);
+    }
+
     const articles = await prisma.article.findMany({
       where,
       include: { category: true },
@@ -36,6 +47,8 @@ export async function POST(req: NextRequest) {
         image: body.image || null,
         categoryId: body.categoryId,
         order: body.order || 0,
+        isGuide: body.isGuide || false,
+        images: body.images ? JSON.stringify(body.images) : null,
       },
       include: { category: true },
     });
