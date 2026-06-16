@@ -334,7 +334,13 @@ async function main() {
     console.log(`  Создано ${catData.subCategories.length} подкатегорий`);
   }
 
-  // Новые категории: Гайды, P2/P3 форматы, Деактивация Кик
+  // Удаляем старые категории p2p3 и deactivation (если остались с прошлых сидов)
+  await prisma.subCategory.deleteMany({ where: { category: { key: { in: ['p2p3', 'deactivation'] } } } });
+  await prisma.article.deleteMany({ where: { category: { key: { in: ['p2p3', 'deactivation'] } } } });
+  await prisma.category.deleteMany({ where: { key: { in: ['p2p3', 'deactivation'] } } });
+  console.log('Удалены старые категории p2p3/deactivation');
+
+  // Новые категории: Гайды
   const extraCategories = [
     {
       key: 'guides',
