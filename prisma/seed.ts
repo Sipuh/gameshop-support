@@ -344,101 +344,32 @@ async function main() {
       borderColor: '#3b82f6',
       icon: '/images/guides.png',
       order: 21,
-    },
-    {
-      key: 'p2p3',
-      name: 'P2/P3 форматы',
-      description: 'Информация о форматах P2 и P3',
-      colorClass: 'c-teal',
-      borderColor: '#14b8a6',
-      icon: '/images/p2p3.png',
-      order: 22,
-    },
-    {
-      key: 'deactivation',
-      name: 'Деактивация Кик',
-      description: 'Инструкции по деактивации и кику',
-      colorClass: 'c-orange',
-      borderColor: '#f97316',
-      icon: '/images/deactivation.png',
-      order: 23,
+      subCategories: [
+        { name: 'P2/P3 форматы', games: 'Как настроить P2 формат на PS4/PS5\nЧто такое P3 формат и как его использовать', order: 1 },
+        { name: 'Деактивация Кик', games: 'Деактивация приставки (Кик)\nКак форматировать HDD на PS4\nПеренос данных с PS4 на PS5', order: 2 },
+      ],
     },
   ];
 
-  for (const cat of extraCategories) {
-    await prisma.category.upsert({
-      where: { key: cat.key },
-      update: { name: cat.name, description: cat.description, colorClass: cat.colorClass, borderColor: cat.borderColor, icon: cat.icon, order: cat.order },
-      create: { key: cat.key, name: cat.name, description: cat.description, colorClass: cat.colorClass, borderColor: cat.borderColor, icon: cat.icon, order: cat.order },
+  for (const catData of extraCategories) {
+    const category = await prisma.category.upsert({
+      where: { key: catData.key },
+      update: { name: catData.name, description: catData.description, colorClass: catData.colorClass, borderColor: catData.borderColor, icon: catData.icon, order: catData.order },
+      create: { key: catData.key, name: catData.name, description: catData.description, colorClass: catData.colorClass, borderColor: catData.borderColor, icon: catData.icon, order: catData.order },
     });
-    console.log(`Категория "${cat.name}" создана`);
-  }
+    console.log(`Категория "${catData.name}" создана`);
 
-  // Гайды (isGuide = true)
-  const guideData = [
-    {
-      title: 'Как настроить P2 формат на PS4/PS5',
-      code: null,
-      description: 'Пошаговая инструкция по настройке P2 формата для совместной игры.',
-      solution: '1. Зайдите в настройки сети\n2. Выберите Настроить подключение\n3. Выберите P2P (Peer-to-Peer)\n4. Подтвердите изменения\n5. Перезагрузите консоль',
-      categoryKey: 'p2p3',
-      isGuide: true,
-    },
-    {
-      title: 'Что такое P3 формат и как его использовать',
-      code: null,
-      description: 'Объяснение формата P3 и его преимущества для мультиплеера.',
-      solution: 'P3 формат — это режим подключения через выделенный сервер.\n\nПреимущества:\n• Стабильное соединение\n• Меньше лагов\n• Лучшая синхронизация',
-      categoryKey: 'p2p3',
-      isGuide: true,
-    },
-    {
-      title: 'Деактивация приставки (Кик)',
-      code: null,
-      description: 'Инструкция по деактивации PlayStation для освобождения активации.',
-      solution: '1. Зайдите в Настройки\n2. Выберите Управление аккаунтом\n3. Активировать как основную\n4. Нажмите Деактивировать\n5. Подтвердите действие',
-      categoryKey: 'deactivation',
-      isGuide: true,
-    },
-    {
-      title: 'Как форматировать HDD на PS4',
-      code: null,
-      description: 'Гайд по форматированию жёсткого диска на PS4.',
-      solution: '1. Выключите консоль\n2. Зажмите кнопку питания 7 секунд (до 2-го писка)\n3. Подключите геймпад через USB\n4. Выберите Initialize PS4\n5. Выберите Full Format\nВнимание: все данные будут удалены!',
-      categoryKey: 'guides',
-      isGuide: true,
-    },
-    {
-      title: 'Перенос данных с PS4 на PS5',
-      code: null,
-      description: 'Как перенести сохранения и игры с PS4 на PS5.',
-      solution: '1. Убедитесь, что обе консоли подключены к одной сети\n2. На PS5 зайдите в Настройки > Система > Перенос данных\n3. Следуйте инструкциям на экране\n4. Перенос может занять до 1 часа',
-      categoryKey: 'guides',
-      isGuide: true,
-    },
-  ];
-
-  for (const guide of guideData) {
-    const cat = await prisma.category.findUnique({ where: { key: guide.categoryKey } });
-    if (!cat) continue;
-    const existing = await prisma.article.findFirst({ where: { title: guide.title } });
-    if (!existing) {
-      await prisma.article.create({
-        data: {
-          title: guide.title,
-          code: guide.code,
-          description: guide.description,
-          solution: guide.solution,
-          categoryId: cat.id,
-          isGuide: true,
-          order: 1,
-        },
+    // Удаляем старые подкатегории и создаём новые
+    await prisma.subCategory.deleteMany({ where: { categoryId: category.id } });
+    for (const sub of catData.subCategories) {
+      await prisma.subCategory.create({
+        data: { name: sub.name, games: sub.games, categoryId: category.id, order: sub.order },
       });
-      console.log(`Гайд "${guide.title}" создан`);
     }
+    console.log(`  Создано ${catData.subCategories.length} подкатегорий`);
   }
 
-  console.log(`Создано ${extraCategories.length} дополнительных категорий`);
+  console.log(`Создано ${extraCategories.length} категорий гайдов`);
 
   // Статьи (примеры)
   const articleData: {
