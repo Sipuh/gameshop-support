@@ -344,10 +344,6 @@ async function main() {
       borderColor: '#3b82f6',
       icon: '/images/guides.png',
       order: 21,
-      subCategories: [
-        { name: 'P2/P3 форматы', games: 'Как настроить P2 формат на PS4/PS5\nЧто такое P3 формат и как его использовать', order: 1 },
-        { name: 'Деактивация Кик', games: 'Деактивация приставки (Кик)\nКак форматировать HDD на PS4\nПеренос данных с PS4 на PS5', order: 2 },
-      ],
     },
   ];
 
@@ -358,18 +354,53 @@ async function main() {
       create: { key: catData.key, name: catData.name, description: catData.description, colorClass: catData.colorClass, borderColor: catData.borderColor, icon: catData.icon, order: catData.order },
     });
     console.log(`Категория "${catData.name}" создана`);
-
-    // Удаляем старые подкатегории и создаём новые
-    await prisma.subCategory.deleteMany({ where: { categoryId: category.id } });
-    for (const sub of catData.subCategories) {
-      await prisma.subCategory.create({
-        data: { name: sub.name, games: sub.games, categoryId: category.id, order: sub.order },
-      });
-    }
-    console.log(`  Создано ${catData.subCategories.length} подкатегорий`);
   }
 
   console.log(`Создано ${extraCategories.length} категорий гайдов`);
+
+  // Гайды как статьи (isGuide=true) с описанием, решением, images
+  const guideArticles = [
+    {
+      title: 'P2/P3 форматы',
+      description: 'Информация о форматах P2 и P3 для подключения на PS4/PS5. P2 (Peer-to-Peer) — подключение напрямую между игроками. P3 — через выделенный сервер.',
+      solution: 'P2 формат (Peer-to-Peer):\n• Игроки соединяются напрямую\n• Зависит от скорости интернета каждого\n• Используется в большинстве игр\n\nP3 формат (Выделенный сервер):\n• Соединение через сервер разработчиков\n• Более стабильное соединение\n• Меньше лагов\n\nКак выбрать:\n1. Зайдите в настройки сети на консоли\n2. Выберите "Настроить подключение"\n3. Выберите нужный формат (P2P или Dedicated)\n4. Сохраните настройки и перезагрузите консоль',
+      categoryKey: 'guides',
+      isGuide: true,
+    },
+    {
+      title: 'Деактивация приставки',
+      description: 'Инструкция по деактивации PlayStation для освобождения активации на другой консоли.',
+      solution: 'Деактивация через консоль:\n1. Зайдите в Настройки\n2. Выберите "Управление аккаунтом"\n3. Нажмите "Активировать как основную"\n4. Выберите "Деактивировать"\n5. Подтвердите действие\n\nДеактивация через сайт (раз в 6 месяцев):\n1. Зайдите на сайт playstation.com\n2. Войдите в аккаунт\n3. Перейдите в раздел "Управление устройствами"\n4. Нажмите "Деактивировать все"\n\nВнимание: деактивация через сайт доступна 1 раз в 6 месяцев!',
+      categoryKey: 'guides',
+      isGuide: true,
+    },
+    {
+      title: 'Кик (Форматирование HDD)',
+      description: 'Гайд по полному форматированию жёсткого диска на PS4 для очистки всех данных и ошибок.',
+      solution: 'Как отформатировать HDD на PS4:\n1. Полностью выключите консоль (не в режиме ожидания)\n2. Зажмите кнопку питания на 7 секунд\n3. Вы услышите 2 сигнала — консоль загрузится в безопасном режиме\n4. Подключите геймпад через USB-кабель\n5. Выберите "Initialize PS4 (Reinstall System Software)"\n6. Выберите "Full" (полное форматирование)\n7. Подтвердите и дождитесь завершения\n\n⚠ ВНИМАНИЕ: все данные будут удалены безвозвратно!\n\nТакже можно использовать:\n• Быстрое форматирование (Quick) — удаляет только файлы\n• Полное форматирование (Full) — полностью очищает диск с перезаписью',
+      categoryKey: 'guides',
+      isGuide: true,
+    },
+  ];
+
+  for (const guide of guideArticles) {
+    const cat = await prisma.category.findUnique({ where: { key: guide.categoryKey } });
+    if (!cat) continue;
+    const existing = await prisma.article.findFirst({ where: { title: guide.title } });
+    if (!existing) {
+      await prisma.article.create({
+        data: {
+          title: guide.title,
+          description: guide.description,
+          solution: guide.solution,
+          categoryId: cat.id,
+          isGuide: true,
+          order: 1,
+        },
+      });
+      console.log(`Гайд "${guide.title}" создан`);
+    }
+  }
 
   // Статьи (примеры)
   const articleData: {

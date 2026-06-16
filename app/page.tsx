@@ -32,9 +32,12 @@ interface Article {
   categoryId: string;
   category: Category;
   order: number;
+  isGuide?: boolean;
+  images?: string[];
 }
 
 const SUPPORT_KEYS = ['ps5', 'ps4', 'network', 'account', 'games'];
+const GUIDE_KEY = 'guides';
 
 const IMG_PREFIX = '/images/';
 
@@ -70,9 +73,11 @@ export default function HomePage() {
   const [expandedCategory, setExpandedCategory] = useState<string | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [gameModalCat, setGameModalCat] = useState<Category | null>(null);
+  const [galleryIdx, setGalleryIdx] = useState(0);
 
   const supportCategories = categories.filter(c => SUPPORT_KEYS.includes(c.key));
-  const gameCategories = categories.filter(c => !SUPPORT_KEYS.includes(c.key));
+  const guidesCategory = categories.find(c => c.key === GUIDE_KEY);
+  const gameCategories = categories.filter(c => !SUPPORT_KEYS.includes(c.key) && c.key !== GUIDE_KEY);
 
   const copyWithToast = async (text: string) => {
     try {
@@ -107,7 +112,7 @@ export default function HomePage() {
 
   const loadCategoryArticles = async (categoryKey: string) => {
     const cat = categories.find(c => c.key === categoryKey);
-    if (cat && !SUPPORT_KEYS.includes(categoryKey)) {
+    if (cat && !SUPPORT_KEYS.includes(categoryKey) && cat.key !== GUIDE_KEY) {
       setSelectedCategory(cat);
       setSelectedArticle(null);
       setSearchQuery('');
@@ -132,6 +137,7 @@ export default function HomePage() {
         try { data.images = JSON.parse(data.images); } catch { data.images = []; }
       }
       setSelectedArticle(data);
+      setGalleryIdx(0);
     } catch {
       setSelectedArticle(null);
     }
@@ -146,12 +152,13 @@ export default function HomePage() {
 
   const goBackToList = () => {
     setSelectedArticle(null);
+    setGalleryIdx(0);
   };
 
   const toggleCategory = (key: string) => {
     setExpandedCategory(expandedCategory === key ? null : key);
     const cat = categories.find(c => c.key === key);
-    if (cat && !SUPPORT_KEYS.includes(key)) {
+    if (cat && !SUPPORT_KEYS.includes(key) && key !== GUIDE_KEY) {
       setSelectedCategory(cat);
       setSearchQuery('');
       setSelectedArticle(null);
@@ -175,6 +182,12 @@ export default function HomePage() {
 
   // ─── СТРАНИЦА СТАТЬИ ───
   if (selectedArticle) {
+    const images: string[] = [];
+    if (selectedArticle.image) images.push(selectedArticle.image);
+    if (selectedArticle.images && Array.isArray(selectedArticle.images)) {
+      selectedArticle.images.forEach((i: string) => { if (!images.includes(i)) images.push(i); });
+    }
+
     return (
       <div className="layout">
         <Sidebar
@@ -192,13 +205,37 @@ export default function HomePage() {
             <div className="article-container">
               <div className="article-card">
                 <div className="article-card-inner">
+                  {/* Галерея */}
+                  {images.length > 0 && (
+                    <div className="article-gallery">
+                      <div className="article-gallery-img-wrap">
+                        <img
+                          className="article-gallery-img"
+                          src={images[galleryIdx]}
+                          alt=""
+                          onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                        />
+                        {images.length > 1 && (
+                          <>
+                            <button className="gallery-nav gallery-prev" onClick={() => setGalleryIdx(g => (g - 1 + images.length) % images.length)}>‹</button>
+                            <button className="gallery-nav gallery-next" onClick={() => setGalleryIdx(g => (g + 1) % images.length)}>›</button>
+                          </>
+                        )}
+                      </div>
+                      {images.length > 1 && (
+                        <div className="article-gallery-dots">
+                          {images.map((_, i) => (
+                            <span key={i} className={`gallery-dot ${i === galleryIdx ? 'active' : ''}`} onClick={() => setGalleryIdx(i)}></span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
+
                   <h2 className="article-title">{selectedArticle.title}</h2>
-                  <div className="article-code-tag">
-                    Код ошибки: {selectedArticle.code || 'не указан'}
-                  </div>
-                  {selectedArticle.image && (
-                    <div style={{ marginBottom: 16 }}>
-                      <img src={selectedArticle.image} alt="" style={{ maxWidth: '100%', borderRadius: 8 }} />
+                  {selectedArticle.code && (
+                    <div className="article-code-tag">
+                      Код ошибки: {selectedArticle.code}
                     </div>
                   )}
                   <div className="article-desc-box">
@@ -227,8 +264,8 @@ export default function HomePage() {
     );
   }
 
-  // ─── СПИСОК СТАТЕЙ КАТЕГОРИИ ПОДДЕРЖКИ ИЛИ ПОИСК ───
-  if ((selectedCategory && SUPPORT_KEYS.includes(selectedCategory.key)) || searchQuery) {
+  // ─── СПИСОК СТАТЕЙ КАТЕГОРИИ ПОДДЕРЖКИ/ГАЙДЫ ИЛИ ПОИСК ───
+  if ((selectedCategory && (SUPPORT_KEYS.includes(selectedCategory.key) || selectedCategory.key === GUIDE_KEY)) || searchQuery) {
     return (
       <div className="layout">
       <Sidebar
@@ -246,7 +283,7 @@ export default function HomePage() {
             <div className="section-title">
               {searchQuery
                 ? `Результаты поиска (${articles.length})`
-                : 'Список ошибок'}
+                : selectedCategory?.name || 'Список'}
             </div>
             {articles.length === 0 ? (
               <p style={{ color: 'var(--text-dim)' }}>Ничего не найдено</p>
@@ -443,7 +480,8 @@ function Sidebar({
   };
 
   const supportCategories = categories.filter(c => SUPPORT_KEYS.includes(c.key));
-  const gameCategories = categories.filter(c => !SUPPORT_KEYS.includes(c.key));
+  const guidesCat = categories.find(c => c.key === GUIDE_KEY);
+  const gameCategories = categories.filter(c => !SUPPORT_KEYS.includes(c.key) && c.key !== GUIDE_KEY);
 
   return (
     <aside className="sidebar">
@@ -505,29 +543,37 @@ function Sidebar({
         </ul>
       </div>
 
-      <div className="sidebar-section">
-        <div className="sidebar-label">Гайды</div>
-        <ul className="nav-list">
-          {gameCategories.filter(c => c.key === 'guides').map((cat) => (
-            <li key={cat.id} className={`nav-item ${expandedCategory === cat.key ? 'active' : ''}`}>
-              <a onClick={() => setGameModalCat(cat)} style={{ cursor: 'pointer' }}>
-                <span className="nav-icon" style={{ fontSize: 18, lineHeight: 1 }}>
-                  📖
-                </span>
-                {cat.name}
+      {guidesCat && (
+        <div className="sidebar-section">
+          <div className="sidebar-label">Гайды</div>
+          <ul className="nav-list">
+            <li className={`nav-item ${expandedCategory === guidesCat.key ? 'active' : ''}`}>
+              <a onClick={() => handleToggle(guidesCat.key)} style={{ cursor: 'pointer' }}>
+                <span className="nav-icon" style={{ fontSize: 18, lineHeight: 1 }}>📖</span>
+                {guidesCat.name}
                 <span className="nav-arrow">
-                  ▶
+                  {expandedCategory === guidesCat.key ? '▼' : '▶'}
                 </span>
               </a>
+              <ul className={`sub-articles ${expandedCategory === guidesCat.key ? 'show' : ''}`}>
+                {(subArticles[guidesCat.key] || []).map((article) => (
+                  <li key={article.id} onClick={() => handleSubArticleClick(article)}>
+                    📄 {article.title}
+                  </li>
+                ))}
+                {loadingArticles[guidesCat.key] && (
+                  <li style={{ color: 'var(--text-muted)', fontStyle: 'italic' }}>Загрузка...</li>
+                )}
+              </ul>
             </li>
-          ))}
-        </ul>
-      </div>
+          </ul>
+        </div>
+      )}
 
       <div className="sidebar-section">
         <div className="sidebar-label">Игры</div>
         <ul className="nav-list">
-          {gameCategories.filter(c => c.key !== 'guides').map((cat) => (
+          {gameCategories.map((cat) => (
             <li key={cat.id} className={`nav-item ${expandedCategory === cat.key ? 'active' : ''}`}>
               <a onClick={(e) => { e.stopPropagation(); setGameModalCat(cat); }} style={{ cursor: 'pointer' }}>
                 <span className="nav-icon" style={{ fontSize: 18, lineHeight: 1 }}>
