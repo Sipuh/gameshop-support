@@ -1,8 +1,8 @@
 import type { Metadata } from 'next'
-import { Inter, Exo_2 } from 'next/font/google'
+import { Montserrat, Exo_2 } from 'next/font/google'
 import './globals.css'
 
-const inter = Inter({ subsets: ['latin', 'cyrillic'], variable: '--font-inter' })
+const montserrat = Montserrat({ subsets: ['latin', 'cyrillic'], variable: '--font-montserrat' })
 const exo2 = Exo_2({ subsets: ['latin', 'cyrillic'], variable: '--font-exo' })
 
 export const metadata: Metadata = {
@@ -23,7 +23,7 @@ export default function RootLayout({
       <head>
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css" />
       </head>
-      <body className={`${inter.variable} ${exo2.variable}`}>
+      <body className={`${montserrat.variable} ${exo2.variable}`}>
         {children}
         <footer>
           <div className="footer-left">
