@@ -60,8 +60,11 @@ export default function AdminPage() {
     categoryId: '',
     image: null as File | null,
     imagePreview: '',
+    images: [] as string[],
+    newImages: [] as File[],
   });
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const multiFileInputRef = useRef<HTMLInputElement>(null);
 
   const showToast = (msg: string) => {
     setAdminToast(msg);
@@ -123,11 +126,21 @@ export default function AdminPage() {
 
   const openCreateModal = () => {
     setEditingArticle(null);
-    setFormData({ title: '', code: '', description: '', solution: '', categoryId: categories[0]?.id || '', image: null, imagePreview: '' });
+    setFormData({ title: '', code: '', description: '', solution: '', categoryId: categories[0]?.id || '', image: null, imagePreview: '', images: [], newImages: [] });
     setModalOpen(true);
   };
 
-  const openEditModal = (article: Article) => {
+  const openEditModal = async (article: Article) => {
+    let existingImages: string[] = [];
+    try {
+      const res = await fetch(`/api/articles/${article.id}`);
+      const data = await res.json();
+      if (data.images && typeof data.images === 'string') {
+        existingImages = JSON.parse(data.images);
+      } else if (Array.isArray(data.images)) {
+        existingImages = data.images;
+      }
+    } catch {}
     setEditingArticle(article);
     setFormData({
       title: article.title,
@@ -137,6 +150,8 @@ export default function AdminPage() {
       categoryId: article.categoryId,
       image: null,
       imagePreview: article.image || '',
+      images: existingImages,
+      newImages: [],
     });
     setModalOpen(true);
   };
@@ -149,11 +164,26 @@ export default function AdminPage() {
   };
 
   const uploadImage = async (file: File): Promise<string> => {
-    const formData = new FormData();
-    formData.append('file', file);
-    const res = await fetch('/api/upload', { method: 'POST', body: formData });
+    const fd = new FormData();
+    fd.append('file', file);
+    const res = await fetch('/api/upload', { method: 'POST', body: fd });
     const data = await res.json();
     return data.url || '';
+  };
+
+  const handleMultiImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (files) {
+      setFormData(prev => ({ ...prev, newImages: [...prev.newImages, ...Array.from(files)] }));
+    }
+  };
+
+  const removeMultiImage = (idx: number) => {
+    setFormData(prev => ({ ...prev, newImages: prev.newImages.filter((_, i) => i !== idx) }));
+  };
+
+  const removeExistingImage = (idx: number) => {
+    setFormData(prev => ({ ...prev, images: prev.images.filter((_, i) => i !== idx) }));
   };
 
   const saveArticle = async () => {
@@ -164,6 +194,13 @@ export default function AdminPage() {
         imageUrl = await uploadImage(formData.image);
       }
 
+      // Upload new images
+      const uploadedUrls = [...formData.images];
+      for (const file of formData.newImages) {
+        const url = await uploadImage(file);
+        if (url) uploadedUrls.push(url);
+      }
+
       const payload = {
         title: formData.title,
         code: formData.code || null,
@@ -171,6 +208,7 @@ export default function AdminPage() {
         solution: formData.solution,
         categoryId: formData.categoryId,
         image: imageUrl || null,
+        images: uploadedUrls,
         order: editingArticle?.order || 0,
       };
 
@@ -511,7 +549,7 @@ export default function AdminPage() {
               <textarea style={{ width: '100%', padding: '10px 14px', margin: '8px 0', background: '#161625', border: '1px solid #1e1e30', borderRadius: '8px', color: '#c0c0e0', fontSize: '14px', outline: 'none', minHeight: '120px', resize: 'vertical' }} placeholder="Решение" value={formData.solution} onChange={(e) => setFormData({ ...formData, solution: e.target.value })} />
 
               <div style={{ marginTop: '12px' }}>
-                <div style={{ fontSize: '13px', color: '#4a4a6a', marginBottom: '8px' }}>Изображение</div>
+                <div style={{ fontSize: '13px', color: '#4a4a6a', marginBottom: '8px' }}>Главное изображение</div>
                 <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
                   <div style={{ width: '80px', height: '80px', background: '#161625', borderRadius: '8px', border: '1px solid #1e1e30', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0 }}>
                     {formData.imagePreview ? (
@@ -537,6 +575,31 @@ export default function AdminPage() {
                       >Удалить</button>
                     )}
                   </div>
+                </div>
+              </div>
+
+              <div style={{ marginTop: '16px' }}>
+                <div style={{ fontSize: '13px', color: '#4a4a6a', marginBottom: '8px' }}>Дополнительные изображения (галерея)</div>
+                <input ref={multiFileInputRef} type="file" accept="image/*" multiple onChange={handleMultiImageChange} style={{ display: 'none' }} />
+                <button
+                  onClick={() => multiFileInputRef.current?.click()}
+                  style={{ padding: '8px 16px', margin: '4px', background: 'transparent', border: '1px solid #1e1e30', borderRadius: '8px', color: '#6a6a8e', fontSize: '13px', cursor: 'pointer' }}
+                  onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#7c5cfc'; e.currentTarget.style.color = '#c0c0e0'; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.borderColor = '#1e1e30'; e.currentTarget.style.color = '#6a6a8e'; }}
+                >+ Добавить изображения</button>
+                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginTop: '8px' }}>
+                  {formData.images.map((url, i) => (
+                    <div key={`e-${i}`} style={{ position: 'relative', width: '60px', height: '60px', borderRadius: '6px', overflow: 'hidden', border: '1px solid #1e1e30' }}>
+                      <img src={url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      <button onClick={() => removeExistingImage(i)} style={{ position: 'absolute', top: 0, right: 0, width: '18px', height: '18px', background: '#ef4444', border: 'none', borderRadius: '0 6px 0 6px', color: '#fff', fontSize: '10px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
+                    </div>
+                  ))}
+                  {formData.newImages.map((file, i) => (
+                    <div key={`n-${i}`} style={{ position: 'relative', width: '60px', height: '60px', borderRadius: '6px', overflow: 'hidden', border: '1px solid #7c5cfc' }}>
+                      <img src={URL.createObjectURL(file)} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      <button onClick={() => removeMultiImage(i)} style={{ position: 'absolute', top: 0, right: 0, width: '18px', height: '18px', background: '#ef4444', border: 'none', borderRadius: '0 6px 0 6px', color: '#fff', fontSize: '10px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
+                    </div>
+                  ))}
                 </div>
               </div>
             </div>
