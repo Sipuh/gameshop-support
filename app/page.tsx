@@ -34,7 +34,8 @@ interface Article {
   order: number;
 }
 
-const SUPPORT_KEYS = ['ps5', 'ps4', 'network', 'account', 'games', 'guides', 'p2p3', 'deactivation'];
+const SUPPORT_KEYS = ['ps5', 'ps4', 'network', 'account', 'games'];
+const GUIDE_KEYS = ['guides'];
 
 const IMG_PREFIX = '/images/';
 
@@ -72,7 +73,8 @@ export default function HomePage() {
   const [gameModalCat, setGameModalCat] = useState<Category | null>(null);
 
   const supportCategories = categories.filter(c => SUPPORT_KEYS.includes(c.key));
-  const gameCategories = categories.filter(c => !SUPPORT_KEYS.includes(c.key));
+  const guideCategories = categories.filter(c => GUIDE_KEYS.includes(c.key));
+  const gameCategories = categories.filter(c => !SUPPORT_KEYS.includes(c.key) && !GUIDE_KEYS.includes(c.key));
 
   const copyWithToast = async (text: string) => {
     try {
@@ -107,7 +109,7 @@ export default function HomePage() {
 
   const loadCategoryArticles = async (categoryKey: string) => {
     const cat = categories.find(c => c.key === categoryKey);
-    if (cat && !SUPPORT_KEYS.includes(categoryKey)) {
+    if (cat && !SUPPORT_KEYS.includes(categoryKey) && !GUIDE_KEYS.includes(categoryKey)) {
       setSelectedCategory(cat);
       setSelectedArticle(null);
       setSearchQuery('');
@@ -228,7 +230,7 @@ export default function HomePage() {
   }
 
   // ─── СПИСОК СТАТЕЙ КАТЕГОРИИ ПОДДЕРЖКИ ИЛИ ПОИСК ───
-  if ((selectedCategory && SUPPORT_KEYS.includes(selectedCategory.key)) || searchQuery) {
+  if ((selectedCategory && (SUPPORT_KEYS.includes(selectedCategory.key) || GUIDE_KEYS.includes(selectedCategory.key))) || searchQuery) {
     return (
       <div className="layout">
       <Sidebar
@@ -443,7 +445,8 @@ function Sidebar({
   };
 
   const supportCategories = categories.filter(c => SUPPORT_KEYS.includes(c.key));
-  const gameCategories = categories.filter(c => !SUPPORT_KEYS.includes(c.key));
+  const guideCategories = categories.filter(c => GUIDE_KEYS.includes(c.key));
+  const gameCategories = categories.filter(c => !SUPPORT_KEYS.includes(c.key) && !GUIDE_KEYS.includes(c.key));
 
   return (
     <aside className="sidebar">
@@ -485,6 +488,33 @@ function Sidebar({
                     }}
                   />
                 </span>
+                {cat.name}
+                <span className="nav-arrow">
+                  {expandedCategory === cat.key ? '▼' : '▶'}
+                </span>
+              </a>
+              <ul className={`sub-articles ${expandedCategory === cat.key ? 'show' : ''}`}>
+                {(subArticles[cat.key] || []).map((article) => (
+                  <li key={article.id} onClick={() => handleSubArticleClick(article)}>
+                    📄 {article.title}
+                  </li>
+                ))}
+                {loadingArticles[cat.key] && (
+                  <li style={{ color: 'var(--text-muted)', fontStyle: 'italic' }}>Загрузка...</li>
+                )}
+              </ul>
+            </li>
+          ))}
+        </ul>
+      </div>
+
+      <div className="sidebar-section">
+        <div className="sidebar-label">Гайды</div>
+        <ul className="nav-list">
+          {guideCategories.map((cat) => (
+            <li key={cat.id} className={`nav-item ${expandedCategory === cat.key ? 'active' : ''}`}>
+              <a onClick={() => handleToggle(cat.key)} style={{ cursor: 'pointer' }}>
+                <span className="nav-icon" style={{ fontSize: 18, lineHeight: 1 }}>📖</span>
                 {cat.name}
                 <span className="nav-arrow">
                   {expandedCategory === cat.key ? '▼' : '▶'}
