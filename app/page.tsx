@@ -459,24 +459,48 @@ function Sidebar({
   const [subArticles, setSubArticles] = useState<Record<string, Article[]>>({});
   const [loadingArticles, setLoadingArticles] = useState<Record<string, boolean>>({});
   const [rates, setRates] = useState<{ try: number | null; uah: number | null }>({ try: null, uah: null });
+  const [prevRates, setPrevRates] = useState<{ try: number | null; uah: number | null }>({ try: null, uah: null });
+  const [rateChanges, setRateChanges] = useState<{ try: 'up' | 'down' | null; uah: 'up' | 'down' | null }>({ try: null, uah: null });
   const [rubToTry, setRubToTry] = useState('');
   const [tryToRub, setTryToRub] = useState('');
   const [rubToUah, setRubToUah] = useState('');
   const [uahToRub, setUahToRub] = useState('');
-  const [isTryFlipped, setIsTryFlipped] = useState(false);
-  const [isUahFlipped, setIsUahFlipped] = useState(false);
 
-  useEffect(() => {
+  const fetchRates = () => {
     fetch('https://open.er-api.com/v6/latest/RUB')
       .then(res => res.json())
       .then(data => {
         if (data.rates) {
           const tryRate = data.rates.TRY ? +(1 / data.rates.TRY).toFixed(4) : null;
           const uahRate = data.rates.UAH ? +(1 / data.rates.UAH).toFixed(4) : null;
-          setRates({ try: tryRate, uah: uahRate });
+
+          setRates(prev => {
+            const prevTry = prev.try;
+            const prevUah = prev.uah;
+            if (prevTry !== null && tryRate !== null) {
+              setRateChanges(prevChanges => ({
+                ...prevChanges,
+                try: tryRate > prevTry ? 'up' : tryRate < prevTry ? 'down' : null,
+              }));
+            }
+            if (prevUah !== null && uahRate !== null) {
+              setRateChanges(prevChanges => ({
+                ...prevChanges,
+                uah: uahRate > prevUah ? 'up' : uahRate < prevUah ? 'down' : null,
+              }));
+            }
+            setTimeout(() => setRateChanges({ try: null, uah: null }), 2000);
+            return { try: tryRate, uah: uahRate };
+          });
         }
       })
       .catch(() => {});
+  };
+
+  useEffect(() => {
+    fetchRates();
+    const interval = setInterval(fetchRates, 30000);
+    return () => clearInterval(interval);
   }, []);
 
   const handleRubToTry = (val: string) => {
@@ -583,8 +607,14 @@ function Sidebar({
               />
             </div>
             {rates.try !== null && (
-              <div style={{ fontSize: '10px', color: 'var(--text-muted)', marginTop: '4px', textAlign: 'center' }}>
+              <div style={{
+                fontSize: '10px', marginTop: '4px', textAlign: 'center',
+                color: rateChanges.try === 'up' ? '#22c55e' : rateChanges.try === 'down' ? '#ef4444' : 'var(--text-muted)',
+                transition: 'color 0.3s',
+              }}>
                 1 RUB = {rates.try} TRY
+                {rateChanges.try === 'up' && ' ↑'}
+                {rateChanges.try === 'down' && ' ↓'}
               </div>
             )}
           </div>
@@ -615,8 +645,14 @@ function Sidebar({
               />
             </div>
             {rates.uah !== null && (
-              <div style={{ fontSize: '10px', color: 'var(--text-muted)', marginTop: '4px', textAlign: 'center' }}>
+              <div style={{
+                fontSize: '10px', marginTop: '4px', textAlign: 'center',
+                color: rateChanges.uah === 'up' ? '#22c55e' : rateChanges.uah === 'down' ? '#ef4444' : 'var(--text-muted)',
+                transition: 'color 0.3s',
+              }}>
                 1 RUB = {rates.uah} UAH
+                {rateChanges.uah === 'up' && ' ↑'}
+                {rateChanges.uah === 'down' && ' ↓'}
               </div>
             )}
           </div>
