@@ -33,8 +33,6 @@ export default function RootLayout({
               <path d="M3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"/>
             </svg>
             <span>Техническая поддержка</span>
-            <span className="footer-sep">•</span>
-            <span>Мы работаем для вас 24/7</span>
           </div>
           <div className="footer-right">
             <span>Последнее обновление: сегодня, {new Date().toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })}</span>

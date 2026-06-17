@@ -385,7 +385,7 @@ export default function HomePage() {
                 <div className="game-card-img-wrap">
                   <img
                     className="game-card-img"
-                    src={`/api/categories/${cat.id}/image`}
+                    src={cat.icon ? `${IMG_PREFIX}${cat.key}.png` : ''}
                     alt={cat.name}
                     onError={(e) => {
                       const target = e.target as HTMLImageElement;
@@ -576,8 +576,16 @@ function Sidebar({
           {gameCategories.map((cat) => (
             <li key={cat.id} className={`nav-item ${expandedCategory === cat.key ? 'active' : ''}`}>
               <a onClick={(e) => { e.stopPropagation(); setGameModalCat(cat); }} style={{ cursor: 'pointer' }}>
-                <span className="nav-icon" style={{ fontSize: 18, lineHeight: 1 }}>
-                  🎮
+                <span className="nav-icon">
+                  <img
+                    className="sidebar-icon-img"
+                    src={cat.icon ? `${IMG_PREFIX}${cat.key}.png` : ''}
+                    alt={cat.name}
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement;
+                      target.style.display = 'none';
+                    }}
+                  />
                 </span>
                 {cat.name}
                 <span className="nav-arrow">
