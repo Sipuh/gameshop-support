@@ -458,6 +458,21 @@ function Sidebar({
 }) {
   const [subArticles, setSubArticles] = useState<Record<string, Article[]>>({});
   const [loadingArticles, setLoadingArticles] = useState<Record<string, boolean>>({});
+  const [rates, setRates] = useState<{ try: number | null; uah: number | null }>({ try: null, uah: null });
+
+  useEffect(() => {
+    fetch('https://open.er-api.com/v6/latest/RUB')
+      .then(res => res.json())
+      .then(data => {
+        if (data.rates) {
+          setRates({
+            try: data.rates.TRY ? +(1 / data.rates.TRY).toFixed(2) : null,
+            uah: data.rates.UAH ? +(1 / data.rates.UAH).toFixed(2) : null,
+          });
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   const handleToggle = async (key: string) => {
     toggleCategory(key);
@@ -491,6 +506,24 @@ function Sidebar({
           <span className="logo-text">GAMESHOP</span>
         </div>
         <span className="logo-sub">Библиотека поддержки</span>
+      </div>
+
+      <div className="sidebar-section" style={{ paddingBottom: 4 }}>
+        <div className="sidebar-label">Курс валют</div>
+        <div style={{ display: 'flex', gap: '8px', marginBottom: '12px', paddingLeft: '4px' }}>
+          <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: '8px', padding: '6px 10px', flex: 1, textAlign: 'center' }}>
+            <div style={{ fontSize: '10px', color: 'var(--text-muted)', marginBottom: '2px' }}>🇹🇷 RUB/TRY</div>
+            <div style={{ fontSize: '14px', fontWeight: 700, color: rates.try ? 'var(--text-main)' : 'var(--text-muted)' }}>
+              {rates.try !== null ? rates.try : '...'}
+            </div>
+          </div>
+          <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: '8px', padding: '6px 10px', flex: 1, textAlign: 'center' }}>
+            <div style={{ fontSize: '10px', color: 'var(--text-muted)', marginBottom: '2px' }}>🇺🇦 RUB/UAH</div>
+            <div style={{ fontSize: '14px', fontWeight: 700, color: rates.uah ? 'var(--text-main)' : 'var(--text-muted)' }}>
+              {rates.uah !== null ? rates.uah : '...'}
+            </div>
+          </div>
+        </div>
       </div>
 
       <div className="sidebar-section">
