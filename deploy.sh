@@ -22,6 +22,9 @@ echo -e "${BLUE}====================================================${NC}"
 # ==================================================
 # 1. Ввод данных от пользователя
 # ==================================================
+echo -e "${YELLOW}⚡ Замечено: сервер с 1GB RAM (тариф FirstVDS Прогрев)${NC}"
+echo -e "${YELLOW}   Будет создан swap-файл на 2GB для стабильной сборки.${NC}"
+echo ""
 read -p "$(echo -e ${YELLOW}"Введите ваш домен (например, support.gameshop.ru): "${NC})" DOMAIN
 read -p "$(echo -e ${YELLOW}"Введите пароль для PostgreSQL пользователя gameshop_admin: "${NC})" DB_PASSWORD
 read -p "$(echo -e ${YELLOW}"Введите JWT_SECRET (любая строка, минимум 32 символа): "${NC})" JWT_SECRET
@@ -33,30 +36,49 @@ echo -e "${GREEN}Начинаем установку...${NC}"
 sleep 2
 
 # ==================================================
-# 2. Обновление системы
+# 2. Создание swap (для серверов с 1GB RAM)
 # ==================================================
-echo -e "${YELLOW}[1/12] Обновление системы...${NC}"
+echo -e "${YELLOW}[1/13] Создание swap-файла (2GB)...${NC}"
+if [ ! -f /swapfile ]; then
+  fallocate -l 2G /swapfile
+  chmod 600 /swapfile
+  mkswap /swapfile
+  swapon /swapfile
+  echo '/swapfile none swap sw 0 0' >> /etc/fstab
+  echo -e "${GREEN}✅ Swap создан: 2GB${NC}"
+else
+  echo -e "${GREEN}✅ Swap уже существует${NC}"
+fi
+
+# Настраиваем swappiness для лучшей производительности
+echo 10 > /proc/sys/vm/swappiness
+echo "vm.swappiness=10" >> /etc/sysctl.conf
+
+# ==================================================
+# 3. Обновление системы
+# ==================================================
+echo -e "${YELLOW}[2/13] Обновление системы...${NC}"
 apt update && apt upgrade -y
 
 # ==================================================
-# 3. Установка Node.js 18.x
+# 4. Установка Node.js 18.x
 # ==================================================
-echo -e "${YELLOW}[2/12] Установка Node.js 18...${NC}"
+echo -e "${YELLOW}[3/13] Установка Node.js 18...${NC}"
 curl -fsSL https://deb.nodesource.com/setup_18.x | bash -
 apt install -y nodejs git nginx
 
 # ==================================================
-# 4. Установка PostgreSQL
+# 5. Установка PostgreSQL
 # ==================================================
-echo -e "${YELLOW}[3/12] Установка PostgreSQL...${NC}"
+echo -e "${YELLOW}[4/13] Установка PostgreSQL...${NC}"
 apt install -y postgresql postgresql-client
 systemctl start postgresql
 systemctl enable postgresql
 
 # ==================================================
-# 5. Настройка PostgreSQL
+# 6. Настройка PostgreSQL
 # ==================================================
-echo -e "${YELLOW}[4/12] Настройка PostgreSQL...${NC}"
+echo -e "${YELLOW}[5/13] Настройка PostgreSQL...${NC}"
 sudo -u postgres psql <<EOF
 CREATE DATABASE gameshop_support;
 CREATE USER gameshop_admin WITH PASSWORD '${DB_PASSWORD}';
@@ -71,24 +93,24 @@ sed -i 's/local   all             all                                     peer/l
 systemctl restart postgresql
 
 # ==================================================
-# 6. Установка PM2
+# 7. Установка PM2
 # ==================================================
-echo -e "${YELLOW}[5/12] Установка PM2...${NC}"
+echo -e "${YELLOW}[6/13] Установка PM2...${NC}"
 npm install -g pm2
 
 # ==================================================
-# 7. Клонирование репозитория
+# 8. Клонирование репозитория
 # ==================================================
-echo -e "${YELLOW}[6/12] Клонирование репозитория...${NC}"
+echo -e "${YELLOW}[7/13] Клонирование репозитория...${NC}"
 cd /var/www
 rm -rf gameshop-support
 git clone https://github.com/Sipuh/gameshop-support.git
 cd gameshop-support
 
 # ==================================================
-# 8. Настройка .env
+# 9. Настройка .env
 # ==================================================
-echo -e "${YELLOW}[7/12] Создание .env...${NC}"
+echo -e "${YELLOW}[8/13] Создание .env...${NC}"
 cat > .env <<EOF
 # База данных PostgreSQL (локальная)
 DATABASE_URL="postgresql://gameshop_admin:${DB_PASSWORD}@localhost:5432/gameshop_support"
@@ -101,25 +123,26 @@ ADMIN_PASSWORD="${ADMIN_PASSWORD}"
 EOF
 
 # ==================================================
-# 9. Установка зависимостей и сборка
+# 10. Установка зависимостей и сборка
 # ==================================================
-echo -e "${YELLOW}[8/12] Установка npm зависимостей...${NC}"
+echo -e "${YELLOW}[9/13] Установка npm зависимостей...${NC}"
 npm install
 
-echo -e "${YELLOW}[9/12] Инициализация базы данных...${NC}"
+echo -e "${YELLOW}[10/13] Инициализация базы данных...${NC}"
 npx prisma generate
 npx prisma db push --force-reset || npx prisma db push
 
-echo -e "${YELLOW}[10/12] Заполнение базы начальными данными...${NC}"
+echo -e "${YELLOW}[11/13] Заполнение базы начальными данными...${NC}"
 npx tsx prisma/seed.ts
 
-echo -e "${YELLOW}[11/12] Сборка проекта...${NC}"
+echo -e "${YELLOW}[12/13] Сборка проекта...${NC}"
+echo -e "${YELLOW}   ⏳ Это может занять 2-5 минут на 1 CPU...${NC}"
 npm run build
 
 # ==================================================
-# 10. Запуск через PM2
+# 11. Запуск через PM2
 # ==================================================
-echo -e "${YELLOW}[12/12] Запуск через PM2...${NC}"
+echo -e "${YELLOW}[13/13] Запуск через PM2...${NC}"
 pm2 delete gameshop-support 2>/dev/null || true
 pm2 start npm --name "gameshop-support" -- start
 pm2 save
