@@ -1,0 +1,55 @@
+name: 🚀 Auto Deploy
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  deploy:
+    name: Deploy to VDS
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v3
+
+      - name: 🔑 Setup SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H ${{ secrets.SERVER_IP }} >> ~/.ssh/known_hosts
+
+      - name: 🚚 Deploy via SSH
+        run: |
+          ssh root@${{ secrets.SERVER_IP }} "
+            set -e
+            
+            echo '📦 Переходим в папку проекта...'
+            cd /var/www/gameshop-support
+            
+            echo '📥 Получаем последние изменения...'
+            git fetch origin
+            git reset --hard origin/main
+            
+            echo '📦 Устанавливаем зависимости...'
+            npm install --production=false
+            
+            echo '🗄️  Применяем миграции БД...'
+            npx prisma generate
+            npx prisma db push
+            
+            echo '🏗️  Собираем проект...'
+            npm run build
+            
+            echo '🔄 Перезапускаем PM2...'
+            pm2 reload gameshop-support --update-env || pm2 start npm --name \"gameshop-support\" -- start
+            
+            echo '✅ Деплой завершен!'
+          "
+
+      - name: ✅ Проверка статуса
+        run: |
+          sleep 10
+          curl -s -o /dev/null -w "%{http_code}" https://${{ secrets.SERVER_DOMAIN }} || \
+          curl -s -o /dev/null -w "%{http_code}" http://${{ secrets.SERVER_IP }}:3000
