@@ -3,7 +3,7 @@
 # ==================================================
 # 🚀 Скрипт автоматического развертывания gameshop-support
 # Использование: bash deploy.sh
-# Запускать от root на свежем сервере Ubuntu 22.04
+# Запускать от root на свежем сервере Ubuntu 22.04 / 24.04
 # ==================================================
 
 set -e
@@ -64,7 +64,7 @@ apt update && apt upgrade -y
 # 4. Установка Node.js 18.x
 # ==================================================
 echo -e "${YELLOW}[3/13] Установка Node.js 18...${NC}"
-curl -fsSL https://deb.nodesource.com/setup_18.x | bash -
+curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
 apt install -y nodejs git nginx
 
 # ==================================================
